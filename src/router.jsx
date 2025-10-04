@@ -1,0 +1,75 @@
+// // src/router.jsx
+
+
+
+import { createBrowserRouter } from "react-router";
+// import Homelayout from "../layouts/Homelayout";
+// import Home from "../pages/Home/Home";
+// import Login from "../pages/Authentication/Login";
+// import Register from "../pages/Authentication/Register";
+// import DashboardLayout from "../layouts/Dashboardlayout";
+// import PrivateRoute from "../provider/PrivateRoute";
+// import ErrorPage from "../components/ErrorPage";
+ import AuthLayout from "./layouts/AuthLayout";
+import App from "./App";
+import Home from "./pages/Home";
+import Login from "./components/Login";
+import RegisterForm from "./components/Register";
+import Register from "./components/Register";
+
+
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <App></App>,
+
+    children: [
+      {
+        index: true,
+
+        //path: "home",
+        element: <Home></Home>,
+      }
+      
+    ],
+  },
+
+  {
+    path: "/auth",
+    element: <AuthLayout></AuthLayout>,
+    children: [
+      {
+        path: "/auth/login",
+        element: <Login></Login>,
+      },
+
+      {
+        path: "/auth/register",
+        element: <Register></Register>,
+      },
+    ],
+  },
+
+  // {
+  //   path: "/dashboard",
+  //   element: (
+  //     <PrivateRoute>
+  //       <DashboardLayout></DashboardLayout>
+  //     </PrivateRoute>
+  //   ),
+  //   children: [
+      
+
+     
+  //   ],
+  // },
+
+  // {
+  //   path: "/*",
+  //   element: <ErrorPage></ErrorPage>,
+  // },
+]);
+
+export default router;
+
+// // Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
