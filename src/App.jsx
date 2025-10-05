@@ -1,16 +1,15 @@
-
 // src/App.jsx
 import React from "react";
 import Navbar from "./components/Navbar";
 import { Outlet } from "react-router";
+import Footer from "./components/Shared/Footer";
 
 function App() {
   return (
     <div>
       <Navbar />
-      <div className="p-6">
-        <Outlet></Outlet>
-      </div>
+      <Outlet></Outlet>
+      <Footer></Footer>
     </div>
   );
 }

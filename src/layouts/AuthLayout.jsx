@@ -2,21 +2,21 @@ import React from 'react';
 
 import { Outlet } from 'react-router';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Shared/Footer';
 
 
 const AuthLayout = () => {
     return (
         <div className='bg-base-200 min-h-screen'>
-            <header className="mb-5 ">
+            <header>
                 <Navbar></Navbar>
             </header>
 
-            <main className="w-11/12 mx-auto ">
+            <main className="w-full mx-auto ">
                 <Outlet></Outlet>
-                
             </main>
 
-            {/* <Footer></Footer> */}
+            <Footer></Footer>
         </div>
     );
 };
