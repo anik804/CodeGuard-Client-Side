@@ -1,44 +1,95 @@
-import React from "react";
+import React, { useState, useContext } from "react";
 import { useForm } from "react-hook-form";
-import { Input } from "./ui/input"; // Shadcn input
+import { motion, AnimatePresence } from "framer-motion";
+import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { useNavigate } from "react-router";
-import { toast } from "sonner"; // Import toast
+import { toast } from "sonner";
+import { AuthContext } from "../provider/AuthProvider";
 
-export default function LoginForm() {
+const AuthPage = () => {
+  const [activeTab, setActiveTab] = useState("login");
+  const [role, setRole] = useState("student");
+  const navigate = useNavigate();
+  const { createUser, signInUser } = useContext(AuthContext);
+
   const {
-    register,
-    handleSubmit,
-    formState: { errors },
+    register: loginRegister,
+    handleSubmit: handleLogin,
+    formState: { errors: loginErrors },
+    reset: resetLogin,
   } = useForm();
 
-  const navigate = useNavigate();
+  const {
+    register: regRegister,
+    handleSubmit: handleRegister,
+    formState: { errors: regErrors },
+    reset: resetRegister,
+  } = useForm();
 
-  const onSubmit = async (data) => {
+  const handleRoleChange = (newRole) => {
+    setRole(newRole);
+    resetRegister();
+  };
+
+  // ---------------- REGISTER ----------------
+  const onRegister = async (data) => {
     try {
-      // ✅ API call
-      const res = await fetch("http://localhost:5000/api/login", {
+      const { email, password } = data;
+
+      // Firebase registration
+      const firebaseUser = await createUser(email, password);
+
+      // Backend registration
+      const res = await fetch("http://localhost:3000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, role, firebaseUid: firebaseUser.uid }),
+      });
+
+      const result = await res.json();
+      if (result.inserted) {
+        toast.success("Registration successful! Please login.");
+        setActiveTab("login");
+        resetRegister();
+      } else {
+        toast.error(result.message);
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Registration failed!");
+    }
+  };
+
+  // ---------------- LOGIN ----------------
+  const onLogin = async (data) => {
+    try {
+      let bodyData = { role, password: data.password };
+
+      if (role === "student") {
+        bodyData.studentId = data.studentId;
+      } else if (role === "examiner") {
+        bodyData.username = data.username;
+      }
+
+      const res = await fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData),
       });
 
       const result = await res.json();
 
       if (res.ok) {
-        // ✅ Success
         toast.success("Login successful!");
-        // Optional: save token if backend returns
-        localStorage.setItem("token", result.token);
-        // Redirect to dashboard or home
-        navigate("/dashboard");
+        if (role === "student") navigate("/student/dashboard");
+        else if (role === "examiner") navigate("/examiner/dashboard");
       } else {
-        // ✅ Error
-        toast.error(result.message || "Login failed");
+        toast.error(result.message);
       }
     } catch (err) {
-      toast.error("Something went wrong!");
       console.error(err);
+      toast.error("Login failed!");
     }
   };
 
@@ -47,192 +98,222 @@ export default function LoginForm() {
       className="min-h-screen flex items-center justify-center bg-cover bg-center"
       style={{
         backgroundImage:
-          "url('https://i.ibb.co.com/TxBhXYq4/c1-DYNu0y-B7.webp')",
+          "url('https://i.ibb.co/TxBhXYq4/c1-DYNu0y-B7.webp')",
       }}
     >
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="bg-white p-8 rounded-xl shadow-lg w-96"
-      >
-        <div className="flex flex-col items-center">
-          <div className="flex items-center mb-2">
-            <img
-              src="https://i.ibb.co/MDQ3jcf4/Png-Item-5916871.png"
-              alt="Logo"
-              className="w-10 h-10 mr-3"
-            />
-            <h1 className="text-2xl font-bold">IIUC</h1>
-          </div>
-          <p className="text-sm text-gray-500 text-center">
+      <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg flex flex-col md:flex-row w-[800px] overflow-hidden">
+        {/* Left */}
+        <div className="w-full md:w-1/2 bg-gray-100 flex flex-col justify-center items-center p-8">
+          <img
+            src="https://i.ibb.co/MDQ3jcf4/Png-Item-5916871.png"
+            alt="IIUC Logo"
+            className="w-24 mb-4"
+          />
+          <h1 className="text-2xl font-bold">IIUC</h1>
+          <p className="text-gray-600 text-sm mt-2">
             CodeGuard - Secure Lab Exam
           </p>
-          <p className="my-5 font-medium text-center">Welcome</p>
+          <div className="mt-8 flex gap-4">
+            <button
+              className={`px-4 py-2 font-medium rounded-md ${
+                activeTab === "login"
+                  ? "bg-indigo-500 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+              onClick={() => setActiveTab("login")}
+            >
+              Login
+            </button>
+            <button
+              className={`px-4 py-2 font-medium rounded-md ${
+                activeTab === "register"
+                  ? "bg-indigo-500 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+              onClick={() => setActiveTab("register")}
+            >
+              Register
+            </button>
+          </div>
         </div>
 
-        {/* Username */}
-        <div className="mb-4">
-          <Input
-            {...register("username", { required: "Username is required" })}
-            placeholder="Username / ID"
-          />
-          {errors.username && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.username.message}
-            </p>
-          )}
+        {/* Right */}
+        <div className="w-full md:w-1/2 p-8">
+          <AnimatePresence mode="wait">
+            {/* ---------- LOGIN ---------- */}
+            {activeTab === "login" && (
+              <motion.form
+                key="login"
+                onSubmit={handleLogin(onLogin)}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                <h2 className="text-xl font-semibold mb-4 text-center">
+                  Login
+                </h2>
+
+                <div className="flex gap-4 justify-center mb-4">
+                  <button
+                    type="button"
+                    className={`px-4 py-2 rounded-md font-medium ${
+                      role === "student"
+                        ? "bg-indigo-500 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                    onClick={() => setRole("student")}
+                  >
+                    Student
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-4 py-2 rounded-md font-medium ${
+                      role === "examiner"
+                        ? "bg-indigo-500 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                    onClick={() => setRole("examiner")}
+                  >
+                    Examiner
+                  </button>
+                </div>
+
+                {role === "student" && (
+                  <Input
+                    {...loginRegister("studentId", {
+                      required: "Student ID required",
+                    })}
+                    placeholder="Student ID (e.g. C231109)"
+                  />
+                )}
+                {role === "examiner" && (
+                  <Input
+                    {...loginRegister("username", {
+                      required: "Username required",
+                    })}
+                    placeholder="Username"
+                  />
+                )}
+
+                <Input
+                  type="password"
+                  {...loginRegister("password", {
+                    required: "Password required",
+                  })}
+                  placeholder="Password"
+                />
+                {loginErrors.password && (
+                  <p className="text-red-500 text-sm">
+                    {loginErrors.password.message}
+                  </p>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full bg-indigo-500 hover:bg-indigo-600"
+                >
+                  LOGIN
+                </Button>
+              </motion.form>
+            )}
+
+            {/* ---------- REGISTER ---------- */}
+            {activeTab === "register" && (
+              <motion.form
+                key="register"
+                onSubmit={handleRegister(onRegister)}
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.3 }}
+                className="space-y-4"
+              >
+                <h2 className="text-xl font-semibold mb-4 text-center">
+                  Register
+                </h2>
+
+                <div className="flex gap-4 justify-center mb-4">
+                  <button
+                    type="button"
+                    className={`px-4 py-2 rounded-md font-medium ${
+                      role === "student"
+                        ? "bg-indigo-500 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                    onClick={() => handleRoleChange("student")}
+                  >
+                    Student
+                  </button>
+                  <button
+                    type="button"
+                    className={`px-4 py-2 rounded-md font-medium ${
+                      role === "examiner"
+                        ? "bg-indigo-500 text-white"
+                        : "bg-gray-200 text-gray-700"
+                    }`}
+                    onClick={() => handleRoleChange("examiner")}
+                  >
+                    Examiner
+                  </button>
+                </div>
+
+                {role === "examiner" && (
+                  <Input
+                    {...regRegister("username", { required: "Username required" })}
+                    placeholder="Username"
+                  />
+                )}
+
+                <Input
+                  {...regRegister("name", { required: "Full Name required" })}
+                  placeholder="Full Name"
+                />
+                <Input
+                  {...regRegister("email", { required: "Email required" })}
+                  type="email"
+                  placeholder="Email"
+                />
+                <Input
+                  {...regRegister("password", {
+                    required: "Password required",
+                    minLength: { value: 6, message: "Min 6 characters" },
+                  })}
+                  type="password"
+                  placeholder="Password"
+                />
+
+                {role === "student" && (
+                  <>
+                    <Input
+                      {...regRegister("studentId", {
+                        required: "Student ID required",
+                      })}
+                      placeholder="Student ID (e.g. C231109)"
+                    />
+                    <Input
+                      {...regRegister("section", {
+                        required: "Section required",
+                      })}
+                      placeholder="Section"
+                    />
+                  </>
+                )}
+
+                <Button
+                  type="submit"
+                  className="w-full bg-indigo-500 hover:bg-indigo-600"
+                >
+                  REGISTER
+                </Button>
+              </motion.form>
+            )}
+          </AnimatePresence>
         </div>
-
-        {/* Password */}
-        <div className="mb-4">
-          <Input
-            type="password"
-            {...register("password", { required: "Password is required" })}
-            placeholder="Password"
-          />
-          {errors.password && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.password.message}
-            </p>
-          )}
-        </div>
-
-        <Button type="submit" className="w-full">
-          LOGIN
-        </Button>
-
-        <p className="mt-4 text-sm text-center text-gray-600">
-          Don't have an account?{" "}
-          <a
-            href="/auth/register"
-            className="text-blue-500 hover:underline font-medium"
-          >
-            Register here
-          </a>
-        </p>
-      </form>
+      </div>
     </div>
   );
-}
+};
 
-
-
-
-
-
-// import React from "react";
-// import { useForm } from "react-hook-form";
-// import { Input } from "./ui/input"; // Shadcn input
-// import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
-// import { Button } from "./ui/button";
-
-// export default function LoginForm() {
-//   const {
-//     register,
-//     handleSubmit,
-//     formState: { errors },
-//   } = useForm();
-
-//   const onSubmit = (data) => {
-//     console.log("Form Data:", data);
-//     // এখানে API call করতে পারো
-//     alert(JSON.stringify(data));
-//   };
-
-//   return (
-//     <div
-//       className="min-h-screen flex items-center justify-center bg-cover bg-center"
-//       style={{
-//         backgroundImage:
-//           "url('https://i.ibb.co.com/TxBhXYq4/c1-DYNu0y-B7.webp')",
-//       }}
-//     >
-//       <form
-//         onSubmit={handleSubmit(onSubmit)}
-//         className="bg-white p-8 rounded-xl shadow-lg w-96"
-//       >
-//         <div className="flex flex-col items-center">
-//           {/* Top section with image left and text right */}
-//           <div className="flex items-center mb-2">
-//             <img
-//               src="https://i.ibb.co/MDQ3jcf4/Png-Item-5916871.png"
-//               alt="Logo"
-//               className="w-10 h-10 mr-3"
-//             />
-//             <h1 className="text-2xl font-bold">IIUC</h1>
-//           </div>
-
-//           {/* Bottom section, center aligned */}
-//           <p className="text-sm text-gray-500 text-center">
-//             CodeGuard - Secure Lab Exam
-//           </p>
-//           <p className="my-5 font-medium text-center">Welcome</p>
-//         </div>
-
-//         {/* Username */}
-//         <div className="mb-4">
-//           <Input
-//             {...register("username", { required: "Username is required" })}
-//             placeholder="Username / ID"
-//           />
-//           {errors.username && (
-//             <p className="text-red-500 text-sm mt-1">
-//               {errors.username.message}
-//             </p>
-//           )}
-//         </div>
-
-//         {/* Password */}
-//         <div className="mb-4">
-//           <Input
-//             type="password"
-//             {...register("password", { required: "Password is required" })}
-//             placeholder="Password"
-//           />
-//           {errors.password && (
-//             <p className="text-red-500 text-sm mt-1">
-//               {errors.password.message}
-//             </p>
-//           )}
-//         </div>
-
-//         {/* Role */}
-//         {/* <div className="mb-6">
-//           <label className="block mb-1 font-medium">I am a:</label>
-//           <RadioGroup
-//             className="flex gap-4"
-//             defaultValue="student"
-//             {...register("role")}
-//           >
-//             <div className="flex items-center gap-1">
-//               <RadioGroupItem value="student" id="student" />
-//               <label htmlFor="student">Student</label>
-//             </div>
-//             <div className="flex items-center gap-1">
-//               <RadioGroupItem value="examiner" id="examiner" />
-//               <label htmlFor="examiner">Examiner</label>
-//             </div>
-//           </RadioGroup>
-//         </div> */}
-
-//         <Button type="submit" className="w-full">
-//           LOGIN
-//         </Button>
-
-//         {/* Error message */}
-//         {/* এইটা API response অনুযায়ী conditionally দেখাবে */}
-//         {/* <p className="text-red-600 mt-2 text-center">Invalid credentials. Please try again</p> */}
-
-//         {/* Register redirect */}
-//         <p className="mt-4 text-sm text-center text-gray-600">
-//           Don't have an account?{" "}
-//           <a
-//             href="/auth/register"
-//             className="text-blue-500 hover:underline font-medium"
-//           >
-//             Register here
-//           </a>
-//         </p>
-//       </form>
-//     </div>
-//   );
-// }
+export default AuthPage;
