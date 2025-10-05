@@ -1,108 +1,56 @@
-/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  onAuthStateChanged,
   signInWithEmailAndPassword,
-  signInWithPopup,
+  onAuthStateChanged,
   signOut,
-  updateProfile,
 } from "firebase/auth";
-import React, { createContext, useEffect, useState } from "react";
 import { auth } from "../../firebase.init";
-//import { auth } from "../firebase-init";
 
 export const AuthContext = createContext();
 
-const googleProvider = new GoogleAuthProvider();
-
-// const app = getAuth(app)
-
 const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState({
-    // name: 'arnab',
-    // email: 'arnab@gmail.com'
-  });
-
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  //console.log(loading, user);
-
-  const createUser = (email, password) => {
-    //
+  const createUser = async (email, password) => {
     setLoading(true);
-    return createUserWithEmailAndPassword(auth, email, password);
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    setUser(userCredential.user);
+    setLoading(false);
+    return userCredential.user;
   };
 
-  const signInUser = (email, password) => {
+  const signInUser = async (email, password) => {
     setLoading(true);
-    return signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    setUser(userCredential.user);
+    setLoading(false);
+    return userCredential.user;
   };
 
-  const googleSignIn = () => {
+  const signOutUser = async () => {
     setLoading(true);
-    return signInWithPopup(auth, googleProvider); // opore google provider banaisi
+    await signOut(auth);
+    setUser(null);
+    setLoading(false);
   };
-
-  const signOutUser = () => {
-    setLoading(true);
-    return signOut(auth);
-  };
-
-  const updateUser = (updateData) => {
-    return updateProfile(auth.currentUser, updateData);
-  };
-
-  // updateProfile(auth.currentUser, {
-  //     displayName: "name", photoURL: "photoURL"
-  //   }).then(() => {
-  //     // Profile updated!
-  //     // ...
-  //   }).catch((error) => {
-  //     cpnsole.log(error)
-  //     // An error occurred
-  //     // ...
-  //   });
-
-  // const updatePro = (updateData) => {
-  //     updateProfile(auth.currentUser,
-  //          displayName: "name", photoURL: "photoURL")}
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        //console.log('has current user inside useEffect', currentUser);
-        setUser(currentUser);
-        setLoading(false);
-      } 
-      
-      else {
-        setUser(null);
-        setLoading(false);
-
-        // eta bhule setLoading true disilam er fole see more e click korle login page e niye jaschilona
-
-        // console.log('current user',currentUser);
-      }
+      setUser(currentUser);
+      setLoading(false);
     });
-
-    return () => {
-      return unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
-  const authData = {
-    user,
-    setUser,
-    createUser,
-    signOutUser,
-    signInUser,
-    loading,
-    setLoading,
-    updateUser,
-    googleSignIn,
-  };
-
-  return <AuthContext value={authData}>{children}</AuthContext>;
+  return (
+    <AuthContext.Provider
+      value={{ user, loading, createUser, signInUser, signOutUser }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };
+
 export default AuthProvider;

@@ -9,7 +9,6 @@ function App() {
     <div>
       <Navbar />
       <div className="p-6">
-        <h1>Welcome to My Codeguard App</h1>
         <Outlet></Outlet>
       </div>
     </div>
