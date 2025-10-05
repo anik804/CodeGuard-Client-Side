@@ -11,17 +11,14 @@ const Home = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* Overlay */}
       <div className="absolute inset-0 bg-black/60 z-0"></div>
 
-      {/* Content */}
       <motion.div
         className="relative z-10 max-w-3xl px-4"
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, ease: "easeOut" }}
       >
-        {/* Heading with animated gradient */}
         <motion.h1
           className="text-5xl md:text-6xl font-extrabold mb-6 bg-gradient-to-r from-indigo-400 via-pink-500 to-purple-500 bg-clip-text text-transparent"
           initial={{ backgroundPosition: "200% 0%" }}
@@ -34,7 +31,6 @@ const Home = () => {
           Welcome to <span className="font-extrabold">CodeGuard</span>
         </motion.h1>
 
-        {/* Paragraph (plain white text) */}
         <motion.p
           className="text-lg md:text-xl mb-8 font-medium text-white"
           initial={{ opacity: 0 }}
@@ -46,7 +42,6 @@ const Home = () => {
           testing environment.
         </motion.p>
 
-        {/* CTA Button with color animation */}
         <motion.button
           className="px-6 py-3 rounded-2xl bg-indigo-500 text-white font-semibold shadow-lg"
           whileHover={{
@@ -60,7 +55,6 @@ const Home = () => {
         </motion.button>
       </motion.div>
 
-      {/* Floating Shapes for Modern Feel */}
       <motion.div
         className="absolute top-10 left-10 w-16 h-16 bg-indigo-500/40 rounded-full blur-xl"
         animate={{ y: [0, -20, 0], x: [0, 20, 0] }}
