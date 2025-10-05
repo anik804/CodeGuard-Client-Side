@@ -97,8 +97,7 @@ const AuthPage = () => {
     <div
       className="min-h-screen flex items-center justify-center bg-cover bg-center"
       style={{
-        backgroundImage:
-          "url('https://i.ibb.co/TxBhXYq4/c1-DYNu0y-B7.webp')",
+        backgroundImage: "url('https://i.ibb.co/TxBhXYq4/c1-DYNu0y-B7.webp')",
       }}
     >
       <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg flex flex-col md:flex-row w-[800px] overflow-hidden">
@@ -151,10 +150,6 @@ const AuthPage = () => {
                 transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                <h2 className="text-xl font-semibold mb-4 text-center">
-                  Login
-                </h2>
-
                 <div className="flex gap-4 justify-center mb-4">
                   <button
                     type="button"
@@ -230,10 +225,6 @@ const AuthPage = () => {
                 transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                <h2 className="text-xl font-semibold mb-4 text-center">
-                  Register
-                </h2>
-
                 <div className="flex gap-4 justify-center mb-4">
                   <button
                     type="button"
@@ -261,7 +252,9 @@ const AuthPage = () => {
 
                 {role === "examiner" && (
                   <Input
-                    {...regRegister("username", { required: "Username required" })}
+                    {...regRegister("username", {
+                      required: "Username required",
+                    })}
                     placeholder="Username"
                   />
                 )}
