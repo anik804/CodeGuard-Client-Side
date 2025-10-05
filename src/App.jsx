@@ -3,6 +3,7 @@
 import React from "react";
 import Navbar from "./components/Navbar";
 import { Outlet } from "react-router";
+import { ExaminerDashboardContent } from "./pages/ExaminerDashboard";
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
       <Navbar />
       <div className="p-6">
         <h1>Welcome to My Codeguard App</h1>
+       
         <Outlet></Outlet>
       </div>
     </div>
