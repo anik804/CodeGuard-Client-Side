@@ -32,7 +32,6 @@ const AuthPage = () => {
     resetRegister();
   };
 
-  // ---------------- REGISTER ----------------
   const onRegister = async (data) => {
     try {
       const { email, password } = data;
@@ -61,7 +60,6 @@ const AuthPage = () => {
     }
   };
 
-  // ---------------- LOGIN ----------------
   const onLogin = async (data) => {
     try {
       let bodyData = { role, password: data.password };
@@ -101,7 +99,6 @@ const AuthPage = () => {
       }}
     >
       <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg flex flex-col md:flex-row w-[800px] overflow-hidden">
-        {/* Left */}
         <div className="w-full md:w-1/2 bg-gray-100 flex flex-col justify-center items-center p-8">
           <img
             src="https://i.ibb.co/MDQ3jcf4/Png-Item-5916871.png"
@@ -136,7 +133,6 @@ const AuthPage = () => {
           </div>
         </div>
 
-        {/* Right */}
         <div className="w-full md:w-1/2 p-8">
           <AnimatePresence mode="wait">
             {/* ---------- LOGIN ---------- */}
@@ -214,7 +210,6 @@ const AuthPage = () => {
               </motion.form>
             )}
 
-            {/* ---------- REGISTER ---------- */}
             {activeTab === "register" && (
               <motion.form
                 key="register"
