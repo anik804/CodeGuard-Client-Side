@@ -2,15 +2,40 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/ui/button";
+import { motion } from "framer-motion";
+import logo from "../assets/logo.png"
 
 const Navbar = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <nav className="bg-white shadow-md px-6 py-4 flex justify-between items-center">
-      {/* Logo */}
-      <div className="text-2xl font-bold text-gray-800">Code Guard</div>
+    <nav className="bg-white shadow-md px-6 py-4 flex justify-between items-center relative">
+      {/* Logo + Name with animation */}
+      <motion.div
+        className="flex items-center gap-3 cursor-pointer"
+        initial={{ x: -50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        whileHover={{ scale: 1.05 }}
+        transition={{ type: "spring", stiffness: 120 }}
+        onClick={() => navigate("/")}
+      >
+        <motion.img
+          src={logo}
+          alt="Logo"
+          className="w-14 h-14"
+          whileHover={{ rotate: 20 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        />
+        <motion.div
+          className="text-2xl font-bold"
+          initial={{ color: "#4B5563" }}
+          animate={{ color: ["#4B5563", "#6366F1", "#EC4899", "#4B5563"] }}
+          transition={{ repeat: Infinity, duration: 5 }}
+        >
+          CodeGuard
+        </motion.div>
+      </motion.div>
 
       {/* Desktop Menu */}
       <div className="hidden md:flex items-center gap-4">
