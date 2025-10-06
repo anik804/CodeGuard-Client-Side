@@ -14,6 +14,9 @@ import { createBrowserRouter } from "react-router";
 import App from "./App";
 import Home from "./pages/Home";
 import Login from "./components/Login";
+import { ExaminerDashboardContent } from "./pages/ExaminerDashboard";
+import MonitoringDashboardPage from "./pages/MonitoringDashboard";
+import { StudentDashboardContent } from "./pages/StudentDashboard";
 // import RegisterForm from "./components/Register";
 // import Register from "./components/Register";
 
@@ -63,6 +66,37 @@ const router = createBrowserRouter([
      
   //   ],
   // },
+  {
+    path: "/examiner-dashboard",
+    element: (
+      
+        <ExaminerDashboardContent></ExaminerDashboardContent>
+      
+    ),
+    children: [
+      
+
+     
+    ],
+  },
+
+  {
+    path: "/monitoring/:roomId",
+    element: (
+      
+        <MonitoringDashboardPage />
+      
+    ),
+  },
+  {
+    path: "/student-join",
+    element: (
+      
+        <StudentDashboardContent />
+      
+    ),
+  },
+
 
   // {
   //   path: "/*",
