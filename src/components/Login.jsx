@@ -80,8 +80,8 @@ const AuthPage = () => {
 
       if (res.ok) {
         toast.success("Login successful!");
-        if (role === "student") navigate("/student/dashboard");
-        else if (role === "examiner") navigate("/examiner/dashboard");
+        if (role === "student") navigate("/student-join");
+        else if (role === "examiner") navigate("/examiner-dashboard");
       } else {
         toast.error(result.message);
       }
