@@ -92,7 +92,7 @@ const router = createBrowserRouter([
     path: "/student-join",
     element: (
       
-        <StudentDashboardContent />
+        <StudentDashboardContent></StudentDashboardContent>
       
     ),
   },
