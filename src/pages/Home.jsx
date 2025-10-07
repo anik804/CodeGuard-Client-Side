@@ -53,6 +53,7 @@ const Home = () => {
         >
           Get Started
         </motion.button>
+        
       </motion.div>
 
       <motion.div
