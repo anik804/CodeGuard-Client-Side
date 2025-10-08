@@ -31,7 +31,29 @@ export default function MonitoringDashboardPage() {
     const handleStudentJoined = ({ studentId }) => {
       console.log(`👩‍🎓 Student ${studentId} joined.`);
 
-      const peer = new Peer({ initiator: true, trickle: false });
+      const peer = new Peer({
+            initiator: true, // examiner is initiator
+            trickle: true, // incremental ICE candidates
+            stream: null, // examiner does not send a stream
+            config: {
+              iceServers: [
+                { urls: ["stun:bn-turn2.xirsys.com"] },
+                {
+                  username:
+                    "J4u6YIUf1k35iq4q0pS1BfFWOC4UUQy25eT5ZsDsWdETzfXFw0TYZL4etEHu7VrnAAAAAGjmYQ5NdXNoZmlx",
+                  credential: "2403ae1a-a447-11f0-9415-0242ac140004",
+                  urls: [
+                    "turn:bn-turn2.xirsys.com:80?transport=udp",
+                    "turn:bn-turn2.xirsys.com:3478?transport=udp",
+                    "turn:bn-turn2.xirsys.com:80?transport=tcp",
+                    "turn:bn-turn2.xirsys.com:3478?transport=tcp",
+                    "turns:bn-turn2.xirsys.com:443?transport=tcp",
+                    "turns:bn-turn2.xirsys.com:5349?transport=tcp",
+                  ],
+                },
+              ],
+            },
+          });
 
       // Send signaling data to student
       peer.on("signal", (signalData) => {
