@@ -22,7 +22,7 @@ export default function MonitoringDashboardPage() {
     if (!roomId || typeof window === "undefined") return;
 
     // Connect to Socket.IO server
-    socketRef.current = io("http://localhost:3000");
+    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
 
     // Join the room as an examiner
     socketRef.current.emit("examiner-join-room", { roomId });

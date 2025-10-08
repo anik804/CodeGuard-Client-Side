@@ -26,7 +26,7 @@ export function StudentDashboardContent() {
       setLoading(true);
 
       // Call backend API
-      const response = await axios.post("http://localhost:3000/rooms/validate", {
+      const response = await axios.post("https://codeguard-server-side-walb.onrender.com/rooms/validate", {
         roomId,
         password,
       });
