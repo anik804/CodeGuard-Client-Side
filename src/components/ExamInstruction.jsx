@@ -43,7 +43,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
   // ✅ validate room again before starting screen share (extra safety)
   // const validateRoom = async () => {
   //   try {
-  //     const response = await axios.post("http://localhost:3000/rooms/validate", {
+  //     const response = await axios.post("https://codeguard-server-side-walb.onrender.com/rooms/validate", {
   //       roomId,
   //       password: "", // optional if already validated before joining
   //     });
@@ -85,7 +85,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       setExamStarted(true);
 
       // ✅ Connect to signaling server
-      socketRef.current = io("http://localhost:3000");
+      socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
       socketRef.current.emit("student-join-room", roomId);
 
       // ✅ Handle examiner signal
