@@ -94,10 +94,21 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
 
         if (!peerRef.current) {
           const peer = new Peer({
-            initiator: false,
-            trickle: false,
-            stream: streamRef.current,
-          });
+              initiator: false, // student is not initiator
+              trickle: true,    // allow incremental ICE candidates
+              stream: streamRef.current, // attach local display stream
+              config: {
+                iceServers: [
+                  { urls: "stun:stun.l.google.com:19302" },
+                  { urls: "stun:stun1.l.google.com:19302" },
+                  {
+                    urls: "turn:relay1.expressturn.com:3478",
+                    username: "efhH6ACzq2nlK4m7",
+                    credential: "7iB1xZKibd9xJwEt",
+                  },
+                ],
+              },
+            });
 
           peer.on("signal", (signalData) => {
             console.log("📤 Sending signal back to examiner:", signalData);
