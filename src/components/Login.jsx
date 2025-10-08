@@ -1,11 +1,11 @@
-import React, { useState, useContext } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
-import { motion, AnimatePresence } from "framer-motion";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { AuthContext } from "../provider/AuthProvider";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState("login");

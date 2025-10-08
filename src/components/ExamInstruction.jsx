@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonitorPlay } from "lucide-react";
-import io from "socket.io-client";
+import { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
-import axios from "axios";
+import io from "socket.io-client";
 
 export function ExamInstructions({ courseName, durationMinutes, roomId, username }) {
   const [isSharing, setIsSharing] = useState(false);
