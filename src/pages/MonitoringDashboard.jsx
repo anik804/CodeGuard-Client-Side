@@ -1,9 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import io from "socket.io-client";
 import Peer from "simple-peer";
+import io from "socket.io-client";
 
-import { Users, Bell, HeartPulse, Clock, ScreenShare, Video } from "lucide-react";
+import { Bell, Clock, HeartPulse, ScreenShare, Users, Video } from "lucide-react";
 import StudentVideo from "../components/StudentVideo";
 import { Button } from "../components/ui/button";
 
@@ -22,7 +22,7 @@ export default function MonitoringDashboardPage() {
     if (!roomId || typeof window === "undefined") return;
 
     // Connect to Socket.IO server
-    socketRef.current = io("http://localhost:3000");
+    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
 
     // Join the room as an examiner
     socketRef.current.emit("examiner-join-room", { roomId });

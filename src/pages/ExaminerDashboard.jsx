@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Import axios for making API requests
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export function ExaminerDashboardContent({ username }) {
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ export function ExaminerDashboardContent({ username }) {
 
     setIsLoading(true);
     try {
-      const response = await axios.post('http://localhost:3000/rooms', {
+      const response = await axios.post('https://codeguard-server-side-walb.onrender.com/rooms', {
         roomId: roomId,
         password: roomPassword
       });

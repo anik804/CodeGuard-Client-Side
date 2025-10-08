@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonitorPlay } from "lucide-react";
-import io from "socket.io-client";
+import { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
-import axios from "axios";
+import io from "socket.io-client";
 
 export function ExamInstructions({ courseName, durationMinutes, roomId, username }) {
   const [isSharing, setIsSharing] = useState(false);
@@ -43,7 +42,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
   // ✅ validate room again before starting screen share (extra safety)
   // const validateRoom = async () => {
   //   try {
-  //     const response = await axios.post("http://localhost:3000/rooms/validate", {
+  //     const response = await axios.post("https://codeguard-server-side-walb.onrender.com/rooms/validate", {
   //       roomId,
   //       password: "", // optional if already validated before joining
   //     });
@@ -85,7 +84,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       setExamStarted(true);
 
       // ✅ Connect to signaling server
-      socketRef.current = io("http://localhost:3000");
+      socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
       socketRef.current.emit("student-join-room", roomId);
 
       // ✅ Handle examiner signal

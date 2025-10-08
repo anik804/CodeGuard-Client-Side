@@ -1,11 +1,11 @@
-import React, { useState, useContext } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
-import { motion, AnimatePresence } from "framer-motion";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { AuthContext } from "../provider/AuthProvider";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState("login");
@@ -40,7 +40,7 @@ const AuthPage = () => {
       const firebaseUser = await createUser(email, password);
 
       // Backend registration
-      const res = await fetch("http://localhost:3000/register", {
+      const res = await fetch("https://codeguard-server-side-walb.onrender.com/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, role, firebaseUid: firebaseUser.uid }),
@@ -70,7 +70,7 @@ const AuthPage = () => {
         bodyData.username = data.username;
       }
 
-      const res = await fetch("http://localhost:3000/login", {
+      const res = await fetch("https://codeguard-server-side-walb.onrender.com/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyData),

@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Label } from '../components/ui/label';
-import { Button } from '../components/ui/button';
 import axios from 'axios';
 import { ExamInstructions } from '../components/ExamInstruction';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 
 export function StudentDashboardContent() {
   const [roomId, setRoomId] = useState('');
@@ -26,7 +26,7 @@ export function StudentDashboardContent() {
       setLoading(true);
 
       // Call backend API
-      const response = await axios.post("http://localhost:3000/rooms/validate", {
+      const response = await axios.post("https://codeguard-server-side-walb.onrender.com/rooms/validate", {
         roomId,
         password,
       });
