@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
@@ -12,38 +11,68 @@ export function StudentDashboardContent() {
   const [password, setPassword] = useState('');
   const [hasJoined, setHasJoined] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [username] = useState("Student"); 
+  const [username, setUsername] = useState('Student');
+
+  // ✅ Fetch student info when page loads (from backend using saved ID)
+  useEffect(() => {
+    const storedStudentId = sessionStorage.getItem('studentId');
+    if (storedStudentId) {
+      fetchStudentName(storedStudentId);
+    }
+  }, []);
+
+  const fetchStudentName = async (studentId) => {
+    try {
+      const res = await axios.get(
+        `http://localhost:3000/api/students/${studentId}`
+      );
+      if (res.data?.name) {
+        setUsername(res.data.name);
+      }
+    } catch (err) {
+      console.error('❌ Failed to fetch student info:', err);
+    }
+  };
 
   const handleJoinRoom = async (e) => {
     e.preventDefault();
 
     if (!roomId || !password) {
-      alert("Please fill in both Room ID and Password.");
+      alert('Please fill in both Room ID and Password.');
       return;
     }
 
     try {
       setLoading(true);
 
-      // Call backend API
-      const response = await axios.post("https://codeguard-server-side-walb.onrender.com/rooms/validate", {
-        roomId,
-        password,
-      });
+      // ✅ Call backend to validate room credentials
+      const response = await axios.post(
+        'http://localhost:3000/api/rooms/validate',
+        { roomId, password }
+      );
 
       if (response.data.success) {
-        console.log("✅ Room validated successfully:", response.data);
+        console.log('✅ Room validated successfully:', response.data);
+
+        // ✅ Save studentId & roomId to sessionStorage
+        sessionStorage.setItem('studentId', response.data.studentId);
+        sessionStorage.setItem('roomId', roomId);
+
+        // ✅ Fetch name immediately
+        if (response.data.studentId) {
+          fetchStudentName(response.data.studentId);
+        }
+
         setHasJoined(true);
       } else {
-        alert(response.data.message || "Invalid credentials.");
+        alert(response.data.message || 'Invalid credentials.');
       }
-
     } catch (err) {
-      console.error("❌ Error joining room:", err);
+      console.error('❌ Error joining room:', err);
       if (err.response) {
-        alert(err.response.data.message || "Invalid credentials.");
+        alert(err.response.data.message || 'Invalid credentials.');
       } else {
-        alert("Server connection failed. Please try again.");
+        alert('Server connection failed. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -109,7 +138,7 @@ export function StudentDashboardContent() {
                   disabled={loading}
                   className="w-full bg-green-700 hover:bg-green-800 text-white text-lg py-6 mt-4"
                 >
-                  {loading ? "Validating..." : "Join Room"}
+                  {loading ? 'Validating...' : 'Join Room'}
                 </Button>
               </form>
             </CardContent>
