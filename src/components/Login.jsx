@@ -47,6 +47,7 @@ const AuthPage = () => {
       });
 
       const result = await res.json();
+      
       if (result.inserted) {
         toast.success("Registration successful! Please login.");
         setActiveTab("login");
