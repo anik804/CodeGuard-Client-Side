@@ -1,19 +1,9 @@
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import io from "socket.io-client";
 import Peer from "simple-peer";
-import { motion, AnimatePresence } from "framer-motion";
-import {
-  Users,
-  Bell,
-  Clock,
-  HeartPulse,
-  ScreenShare,
-  Video,
-  AlertTriangle,
-  Globe,
-  X,
-} from "lucide-react";
+import io from "socket.io-client";
+
+import { Bell, Clock, HeartPulse, ScreenShare, Users, Video } from "lucide-react";
 import StudentVideo from "../components/StudentVideo";
 import { Button } from "../components/ui/button";
 
