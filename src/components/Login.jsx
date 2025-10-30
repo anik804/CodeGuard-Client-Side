@@ -40,7 +40,7 @@ const AuthPage = () => {
       const firebaseUser = await createUser(email, password);
 
       // Backend registration
-      const res = await fetch("http://localhost:3000/api/register", {
+      const res = await fetch("http://localhost:3000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, role, firebaseUid: firebaseUser.uid }),
@@ -60,36 +60,48 @@ const AuthPage = () => {
     }
   };
 
-  const onLogin = async (data) => {
-    try {
-      let bodyData = { role, password: data.password };
+ const onLogin = async (data) => {
+  try {
+    let bodyData = { role, password: data.password };
 
-      if (role === "student") {
-        bodyData.studentId = data.studentId;
-      } else if (role === "examiner") {
-        bodyData.username = data.username;
-      }
-
-      const res = await fetch("http://localhost:3000/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(bodyData),
-      });
-
-      const result = await res.json();
-
-      if (res.ok) {
-        toast.success("Login successful!");
-        if (role === "student") navigate("/student-join");
-        else if (role === "examiner") navigate("/examiner-dashboard");
-      } else {
-        toast.error(result.message);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Login failed!");
+    if (role === "student") {
+      bodyData.studentId = data.studentId;
+    } else if (role === "examiner") {
+      bodyData.username = data.username;
     }
-  };
+
+    const res = await fetch("http://localhost:3000/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(bodyData),
+    });
+
+    const result = await res.json();
+
+    if (res.ok) {
+      toast.success("Login successful!");
+
+      // ✅ Store student ID in sessionStorage if role is student
+      if (role === "student") {
+        sessionStorage.setItem("studentId", data.studentId);
+        
+        navigate("/student-join");
+      } 
+      // ✅ Optionally store username for examiner
+      else if (role === "examiner") {
+        sessionStorage.setItem("username", data.username);
+        navigate("/examiner-dashboard");
+      }
+
+    } else {
+      toast.error(result.message);
+    }
+  } catch (err) {
+    console.error(err);
+    toast.error("Login failed!");
+  }
+};
+
 
   return (
     <div

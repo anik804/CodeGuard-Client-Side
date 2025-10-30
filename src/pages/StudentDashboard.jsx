@@ -19,14 +19,14 @@ export function StudentDashboardContent() {
     const storedStudentId = sessionStorage.getItem('studentId');
     if (storedStudentId) {
       fetchStudentName(storedStudentId);
+    } else {
+      console.warn('⚠️ No studentId found in sessionStorage.');
     }
   }, []);
 
   const fetchStudentName = async (studentId) => {
     try {
-      const res = await axios.get(
-        `http://localhost:3000/api/students/${studentId}`
-      );
+      const res = await axios.get(`http://localhost:3000/api/students/${studentId}`);
       if (res.data?.name) {
         setUsername(res.data.name);
       }
@@ -43,26 +43,27 @@ export function StudentDashboardContent() {
       return;
     }
 
+    const storedStudentId = sessionStorage.getItem('studentId');
+    if (!storedStudentId) {
+      alert('Student ID not found. Please log in again.');
+      return;
+    }
+
     try {
       setLoading(true);
 
-      // ✅ Call backend to validate room credentials
-      const response = await axios.post(
-        'http://localhost:3000/api/rooms/validate',
-        { roomId, password }
-      );
+      // ✅ Validate room credentials
+      const response = await axios.post('http://localhost:3000/api/rooms/validate', {
+        roomId,
+        password,
+        studentId: storedStudentId,
+      });
 
       if (response.data.success) {
         console.log('✅ Room validated successfully:', response.data);
 
-        // ✅ Save studentId & roomId to sessionStorage
-        sessionStorage.setItem('studentId', response.data.studentId);
+        // ✅ Save roomId only (studentId already saved from login)
         sessionStorage.setItem('roomId', roomId);
-
-        // ✅ Fetch name immediately
-        if (response.data.studentId) {
-          fetchStudentName(response.data.studentId);
-        }
 
         setHasJoined(true);
       } else {
@@ -113,7 +114,9 @@ export function StudentDashboardContent() {
             <CardContent className="pb-10">
               <form onSubmit={handleJoinRoom} className="w-full max-w-sm mx-auto space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="room-id" className="text-gray-700">Room ID</Label>
+                  <Label htmlFor="room-id" className="text-gray-700">
+                    Room ID
+                  </Label>
                   <Input
                     id="room-id"
                     placeholder="Enter the Room ID"
