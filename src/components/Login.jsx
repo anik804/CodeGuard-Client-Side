@@ -70,11 +70,11 @@ const AuthPage = () => {
       bodyData.username = data.username;
     }
 
-    const res = await fetch("http://localhost:3000/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyData),
-    });
+      const res = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData),
+      });
 
     const result = await res.json();
 
