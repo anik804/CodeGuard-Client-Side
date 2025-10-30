@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { AnimatePresence, motion } from "framer-motion";
 import { useContext, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -40,7 +41,7 @@ const AuthPage = () => {
       const firebaseUser = await createUser(email, password);
 
       // Backend registration
-      const res = await fetch("http://localhost:3000/api/register", {
+      const res = await fetch("http://localhost:3000/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, role, firebaseUid: firebaseUser.uid }),
@@ -71,7 +72,7 @@ const AuthPage = () => {
         bodyData.username = data.username;
       }
 
-      const res = await fetch("http://localhost:3000/api/login", {
+      const res = await fetch("http://localhost:3000/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyData),
