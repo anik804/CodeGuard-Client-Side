@@ -1,0 +1,3 @@
+- [x] Import Dashboard component in src/router.jsx
+- [x] Change the index element under /examiner-dashboard route to <Dashboard />
+- [x] Update the "Dashboard" menu item url in src/layouts/DashboardSidebar.jsx from "/" to "." for relative navigation
