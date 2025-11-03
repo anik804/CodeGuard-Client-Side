@@ -38,7 +38,7 @@ export default function StudentProfile() {
   if (!student)
     return (
       <div className="text-center mt-10 text-gray-500 font-medium">
-        No student data found.
+        No student data found. please log in again.
       </div>
     );
 
