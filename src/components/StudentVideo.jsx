@@ -1,8 +1,12 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
+import { Maximize2, Minimize2, User } from "lucide-react";
+import { Button } from "./ui/button";
 
 const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A" }) => {
   const ref = useRef(null);
+  const containerRef = useRef(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (ref.current) {
@@ -20,24 +24,99 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
     };
   }, [peer, stream]);
 
+  const toggleFullscreen = () => {
+    if (!containerRef.current) return;
+
+    if (!isFullscreen) {
+      if (containerRef.current.requestFullscreen) {
+        containerRef.current.requestFullscreen();
+      } else if (containerRef.current.webkitRequestFullscreen) {
+        containerRef.current.webkitRequestFullscreen();
+      } else if (containerRef.current.msRequestFullscreen) {
+        containerRef.current.msRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("msfullscreenchange", handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("msfullscreenchange", handleFullscreenChange);
+    };
+  }, []);
+
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
-      <div className="relative bg-black flex justify-center items-center aspect-video">
+    <div 
+      ref={containerRef}
+      className={`bg-white rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 ${
+        isFullscreen ? "fixed inset-0 z-50 rounded-none" : "hover:shadow-xl"
+      }`}
+    >
+      <div className="relative bg-gradient-to-br from-gray-900 to-black flex justify-center items-center aspect-video group">
         <video
           ref={ref}
           autoPlay
           playsInline
           muted
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
-        <div className="absolute top-2 right-2 px-2 py-0.5 text-xs text-white rounded-full bg-green-500">
-          ACTIVE
+        <div className="absolute top-3 right-3 flex items-center space-x-2">
+          <div className="px-2.5 py-1 text-xs font-semibold text-white rounded-full bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg flex items-center space-x-1.5">
+            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+            <span>LIVE</span>
+          </div>
+          <Button
+            onClick={toggleFullscreen}
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 bg-black/50 hover:bg-black/70 text-white border border-white/20 rounded"
+          >
+            {isFullscreen ? (
+              <Minimize2 className="w-4 h-4" />
+            ) : (
+              <Maximize2 className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+          <p className="text-white text-xs font-medium">Click fullscreen icon to expand</p>
         </div>
       </div>
-      <div className="p-3 border-t">
-        <p className="font-semibold text-sm truncate">{studentName}</p>
-        <p className="text-xs text-gray-500">ID: {studentId}</p>
-        <p className="text-xs text-gray-700 mt-1">Normal Activity</p>
+      <div className="p-4 bg-gradient-to-r from-gray-50 to-white border-t border-gray-200">
+        <div className="flex items-center space-x-3">
+          <div className="flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-semibold text-sm">
+              {studentName.charAt(0).toUpperCase()}
+            </div>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-sm text-gray-900 truncate">{studentName}</p>
+            <p className="text-xs text-gray-500 truncate">ID: {studentId}</p>
+          </div>
+        </div>
+        <div className="mt-2 flex items-center space-x-2">
+          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          <p className="text-xs text-gray-600 font-medium">Normal Activity</p>
+        </div>
       </div>
     </div>
   );
