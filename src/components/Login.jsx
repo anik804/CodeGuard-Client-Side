@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -32,14 +32,40 @@ const AuthPage = () => {
     resetRegister();
   };
 
+  // Redirect logged-in users automatically
+  useEffect(() => {
+    const storedRole = sessionStorage.getItem("role");
+    if (storedRole === "examiner") navigate("/examiner-dashboard", { replace: true });
+    if (storedRole === "student") navigate("/student-dashboard", { replace: true });
+  }, [navigate]);
+
+  // ✅ Updated onRegister with Gmail verification
   const onRegister = async (data) => {
     try {
       const { email, password } = data;
 
-      // Firebase registration
+      // --- Check if email is a verified Google email ---
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+      if (!emailRegex.test(email)) {
+        toast.error("Please use a verified Google email (e.g., yourname@gmail.com)");
+        return;
+      }
+
+      // --- Optional DNS check (to ensure Gmail servers respond) ---
+      try {
+        const checkRes = await fetch(`https://dns.google/resolve?name=gmail.com&type=MX`);
+        const checkData = await checkRes.json();
+        if (!checkData || !checkData.Answer || checkData.Answer.length === 0) {
+          toast.error("Unable to verify Google email. Try again.");
+          return;
+        }
+      } catch {
+        // Continue silently if DNS check fails
+      }
+
+      // --- Proceed with Firebase registration ---
       const firebaseUser = await createUser(email, password);
 
-      // Backend registration
       const res = await fetch("http://localhost:3000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -52,56 +78,49 @@ const AuthPage = () => {
         setActiveTab("login");
         resetRegister();
       } else {
-        toast.error(result.message);
+        toast.error(result.message || "Registration failed!");
       }
     } catch (err) {
       console.error(err);
-      toast.error("Registration failed!");
+      toast.error("Registration failed! Try again.");
     }
   };
 
- const onLogin = async (data) => {
-  try {
-    let bodyData = { role, password: data.password };
+  const onLogin = async (data) => {
+    try {
+      let bodyData = { role, password: data.password };
 
-    if (role === "student") {
-      bodyData.studentId = data.studentId;
-    } else if (role === "examiner") {
-      bodyData.username = data.username;
-    }
+      if (role === "student") bodyData.studentId = data.studentId;
+      else if (role === "examiner") bodyData.username = data.username;
 
-    const res = await fetch("http://localhost:3000/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(bodyData),
-    });
+      const res = await fetch("http://localhost:3000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData),
+      });
 
-    const result = await res.json();
+      const result = await res.json();
 
-    if (res.ok) {
-      toast.success("Login successful!");
+      if (res.ok) {
+        toast.success("Login successful!");
 
-      // ✅ Store student ID in sessionStorage if role is student
-      if (role === "student") {
-        sessionStorage.setItem("studentId", data.studentId);
-        
-        navigate("/student-join");
-      } 
-      // ✅ Optionally store username for examiner
-      else if (role === "examiner") {
-        sessionStorage.setItem("username", data.username);
-        navigate("/examiner-dashboard");
+        if (role === "student") {
+          sessionStorage.setItem("role", "student");
+          sessionStorage.setItem("studentId", data.studentId);
+          navigate("/student-dashboard", { replace: true });
+        } else if (role === "examiner") {
+          sessionStorage.setItem("role", "examiner");
+          sessionStorage.setItem("username", data.username);
+          navigate("/examiner-dashboard", { replace: true });
+        }
+      } else {
+        toast.error(result.message || "Invalid credentials");
       }
-
-    } else {
-      toast.error(result.message);
+    } catch (err) {
+      console.error(err);
+      toast.error("Login failed! Try again.");
     }
-  } catch (err) {
-    console.error(err);
-    toast.error("Login failed!");
-  }
-};
-
+  };
 
   return (
     <div
@@ -111,6 +130,7 @@ const AuthPage = () => {
       }}
     >
       <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg flex flex-col md:flex-row w-[800px] overflow-hidden">
+        {/* Left Section */}
         <div className="w-full md:w-1/2 bg-gray-100 flex flex-col justify-center items-center p-8">
           <img
             src="https://i.ibb.co/MDQ3jcf4/Png-Item-5916871.png"
@@ -118,9 +138,8 @@ const AuthPage = () => {
             className="w-24 mb-4"
           />
           <h1 className="text-2xl font-bold">IIUC</h1>
-          <p className="text-gray-600 text-sm mt-2">
-            CodeGuard - Secure Lab Exam
-          </p>
+          <p className="text-gray-600 text-sm mt-2">CodeGuard - Secure Lab Exam</p>
+
           <div className="mt-8 flex gap-4">
             <button
               className={`px-4 py-2 font-medium rounded-md ${
@@ -145,9 +164,9 @@ const AuthPage = () => {
           </div>
         </div>
 
+        {/* Right Section */}
         <div className="w-full md:w-1/2 p-8">
           <AnimatePresence mode="wait">
-            {/* ---------- LOGIN ---------- */}
             {activeTab === "login" && (
               <motion.form
                 key="login"
@@ -258,12 +277,18 @@ const AuthPage = () => {
                 </div>
 
                 {role === "examiner" && (
-                  <Input
-                    {...regRegister("username", {
-                      required: "Username required",
-                    })}
-                    placeholder="Username"
-                  />
+                  <>
+                    <Input
+                      {...regRegister("username", { required: "Username required" })}
+                      placeholder="Username"
+                    />
+                    <Input
+                      {...regRegister("designation", {
+                        required: "Designation required",
+                      })}
+                      placeholder="Designation"
+                    />
+                  </>
                 )}
 
                 <Input

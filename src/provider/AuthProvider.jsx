@@ -33,6 +33,7 @@ const AuthProvider = ({ children }) => {
     setLoading(true);
     await signOut(auth);
     setUser(null);
+    sessionStorage.clear(); // clear sessionStorage on logout
     setLoading(false);
   };
 
