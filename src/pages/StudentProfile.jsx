@@ -76,6 +76,7 @@ function InfoCard({ label, value }) {
   );
 }
 
+// update student profile page
 
 
 // import { motion } from "framer-motion";
