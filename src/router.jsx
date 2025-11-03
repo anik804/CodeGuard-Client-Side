@@ -76,8 +76,9 @@ import { Outlet } from "react-router";
 import Profile from "./pages/Profile";
 import { ExaminerDashboardContent } from "./pages/ExaminerDashboard";
 import StudentDashboard2 from "./pages/StudentDashboard2";
-import JoinExam from "./pages/JoinExam";
+// import JoinExam from "./pages/JoinExam";
 import StudentProfile from "./pages/StudentProfile";
+import { StudentDashboardContent } from "./pages/StudentDashboard";
 // import JoinExam from "./pages/JoinExam";
 // import StudentProfile from "./pages/StudentProfile";
 // import StudentProfile from "./pages/StudentProfile";
@@ -132,7 +133,7 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <StudentDashboard2 /> }, // Overview
-      { path: "join-exam", element: <JoinExam /> },
+      { path: "join-exam", element: <StudentDashboardContent></StudentDashboardContent> },
       { path: "stu-profile", element: <StudentProfile /> },
     ],
   },
@@ -148,5 +149,8 @@ const router = createBrowserRouter([
     ),
   },
 ]);
+//test2
+//testing push
+//test65
 
 export default router;
