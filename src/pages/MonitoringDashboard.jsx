@@ -238,11 +238,26 @@ export default function MonitoringDashboardPage() {
       return;
     }
 
+    console.log("📤 Starting PDF upload...");
+    console.log("📤 File details:", {
+      name: questionFile.name,
+      type: questionFile.type,
+      size: questionFile.size
+    });
+
+    // Validate file type on frontend
+    if (questionFile.type !== 'application/pdf') {
+      toast.error("Please select a PDF file");
+      return;
+    }
+
     setUploading(true);
     const formData = new FormData();
     formData.append('question', questionFile);
 
     try {
+      console.log(`📤 Uploading to: http://localhost:3000/api/rooms/${roomId}/question`);
+      
       const response = await axios.post(
         `http://localhost:3000/api/rooms/${roomId}/question`,
         formData,
@@ -253,13 +268,21 @@ export default function MonitoringDashboardPage() {
         }
       );
 
+      console.log("📤 Upload response:", response.data);
+
       if (response.data.success) {
-        setQuestionUrl(response.data.questionUrl);
+        // PDF is now stored in MongoDB, so we just mark it as uploaded
+        setQuestionUrl("uploaded"); // Mark as uploaded (we'll use roomId to fetch)
+        console.log("✅ Upload successful! File:", response.data.fileName);
         toast.success("Exam question uploaded successfully!");
+      } else {
+        console.error("❌ Upload failed:", response.data);
+        toast.error(response.data.message || "Failed to upload question");
       }
     } catch (error) {
-      console.error("Upload error:", error);
-      toast.error(error.response?.data?.message || "Failed to upload question");
+      console.error("❌ Upload error:", error);
+      console.error("❌ Error response:", error.response?.data);
+      toast.error(error.response?.data?.message || error.message || "Failed to upload question");
     } finally {
       setUploading(false);
     }
@@ -272,26 +295,24 @@ export default function MonitoringDashboardPage() {
       return;
     }
     
-    // Fetch question URL from server to ensure we have the latest
+    // Verify question exists in database
     try {
       const response = await fetch(`http://localhost:3000/api/rooms/${roomId}/question`);
       const data = await response.json();
       
-      if (data.success && data.questionUrl) {
-        socketRef.current.emit("exam-start", { roomId, questionUrl: data.questionUrl });
+      if (data.success && data.hasQuestion) {
+        // Emit exam-start with just roomId (students will use it to fetch PDF)
+        socketRef.current.emit("exam-start", { roomId });
         setExamStarted(true);
         timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
         toast.success("Exam started! Questions sent to all students.");
+        console.log("✅ Exam started for room:", roomId);
       } else {
         toast.error("Question not found. Please upload questions again.");
       }
     } catch (error) {
       console.error("Error fetching question:", error);
-      // Fallback to using state questionUrl
-      socketRef.current.emit("exam-start", { roomId, questionUrl });
-      setExamStarted(true);
-      timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
-      toast.success("Exam started! Questions sent to all students.");
+      toast.error("Failed to verify question. Please try again.");
     }
   };
 

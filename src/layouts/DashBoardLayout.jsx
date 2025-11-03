@@ -11,7 +11,7 @@ export function DashboardLayout({ children }) {
         </div>
 
         {/* Main Content */}
-        <main className="flex-1  ml-[80px] transition-all duration-300 md:ml-[170px]">
+        <main className="flex-1  ml-20 transition-all duration-300 md:ml-[170px]">
           <div className="p-6">
             {/* <SidebarTrigger className="mb-4" /> */}
             {children}
