@@ -61,7 +61,7 @@ export function StudentDashboardSidebar() {
               animate={{ opacity: 1, x: 0 }}
               className="flex flex-col"
             >
-              <span className="font-bold text-lg gradient-text">CodeGuard</span>
+              <span className="font-bold text-lg gradient-text">Code Guard</span>
               <span className="text-xs text-muted-foreground">Student Portal</span>
             </motion.div>
           )}
