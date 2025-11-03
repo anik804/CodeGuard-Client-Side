@@ -128,7 +128,7 @@ export function StudentDashboardContent({ onStudentNameChange }) {
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-green-700 hover:bg-green-800 text-white text-lg py-6 mt-4"
+                className="w-full bg-black hover:bg-black text-white text-lg py-6 mt-4"
               >
                 {loading ? 'Validating...' : 'Join Room'}
               </Button>
