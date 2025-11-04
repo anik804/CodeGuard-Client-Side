@@ -3,7 +3,7 @@ import Peer from "simple-peer";
 import { Maximize2, Minimize2, User } from "lucide-react";
 import { Button } from "./ui/button";
 
-const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A" }) => {
+const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A", isFlagged = false }) => {
   const ref = useRef(null);
   const containerRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -69,9 +69,13 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
       ref={containerRef}
       className={`bg-white rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 ${
         isFullscreen ? "fixed inset-0 z-50 rounded-none" : "hover:shadow-xl"
+      } ${
+        isFlagged ? "ring-4 ring-red-500 ring-offset-2 animate-pulse" : ""
       }`}
     >
-      <div className="relative bg-gradient-to-br from-gray-900 to-black flex justify-center items-center aspect-video group">
+      <div className={`relative bg-gradient-to-br from-gray-900 to-black flex justify-center items-center aspect-video group ${
+        isFlagged ? "ring-4 ring-red-500" : ""
+      }`}>
         <video
           ref={ref}
           autoPlay
@@ -114,8 +118,17 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
           </div>
         </div>
         <div className="mt-2 flex items-center space-x-2">
-          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-          <p className="text-xs text-gray-600 font-medium">Normal Activity</p>
+          {isFlagged ? (
+            <>
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <p className="text-xs text-red-600 font-medium">⚠️ Flagged Activity</p>
+            </>
+          ) : (
+            <>
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <p className="text-xs text-gray-600 font-medium">Normal Activity</p>
+            </>
+          )}
         </div>
       </div>
     </div>
