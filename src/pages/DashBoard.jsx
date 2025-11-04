@@ -29,15 +29,15 @@ const examActivityData = [
 ];
 
 const cheatingAlertsData = [
-  { exam: "Midterm 1", alerts: 5 },
-  { exam: "Midterm 2", alerts: 8 },
+  { exam: "Mid-1", alerts: 5 },
+  { exam: "Mid-2", alerts: 8 },
   { exam: "Final", alerts: 3 },
   { exam: "Quiz 1", alerts: 12 },
   { exam: "Quiz 2", alerts: 6 },
 ];
 
 const attendanceData = [
-  { name: "Present", value: 85, color: "hsl(189, 94%, 43%)" },
+  { name: "Present", value: 85, color: "hsl(120, 70%, 40%)" },
   { name: "Absent", value: 10, color: "hsl(0, 72%, 51%)" },
   { name: "Late", value: 5, color: "hsl(45, 93%, 47%)" },
 ];
@@ -71,7 +71,18 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
-  const { user } = useContext(AuthContext); // get user info
+  const { user } = useContext(AuthContext);
+
+  const tooltipStyle = {
+    contentStyle: {
+      backgroundColor: "hsl(0 0% 0%)",
+      border: "1px solid hsl(0 0% 20%)",
+      borderRadius: "8px",
+      color: "#fff",
+    },
+    itemStyle: { color: "#fff" },
+    labelStyle: { color: "#fff" },
+  };
 
   return (
     <div className="space-y-6">
@@ -136,24 +147,25 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={examActivityData}>
+                <LineChart data={examActivityData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 20%)" />
-                  <XAxis dataKey="month" stroke="hsl(0 0% 60%)" />
+                  <XAxis dataKey="month" stroke="hsl(0 0% 60%)" interval={0} />
                   <YAxis stroke="hsl(0 0% 60%)" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(0 0% 10%)",
-                      border: "1px solid hsl(0 0% 20%)",
-                      borderRadius: "8px",
-                    }}
-                  />
+                  <Tooltip {...tooltipStyle} />
                   <Line
                     type="monotone"
                     dataKey="exams"
-                    stroke="hsl(189, 94%, 43%)"
+                    stroke="url(#colorUv)"
                     strokeWidth={3}
-                    dot={{ fill: "hsl(189, 94%, 43%)", r: 5 }}
+                    dot={{ fill: "hsl(189, 94%, 43%)", r: 6 }}
+                    activeDot={{ r: 8 }}
                   />
+                  <defs>
+                    <linearGradient id="colorUv" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(189, 94%, 43%)" stopOpacity={0.8}/>
+                      <stop offset="100%" stopColor="hsl(63, 94%, 47%)" stopOpacity={0.3}/>
+                    </linearGradient>
+                  </defs>
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -168,18 +180,22 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={cheatingAlertsData}>
+                <BarChart
+                  data={cheatingAlertsData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 20%)" />
-                  <XAxis dataKey="exam" stroke="hsl(0 0% 60%)" />
+                  <XAxis dataKey="exam" stroke="hsl(0 0% 60%)" interval={0} />
                   <YAxis stroke="hsl(0 0% 60%)" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(0 0% 10%)",
-                      border: "1px solid hsl(0 0% 20%)",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Bar dataKey="alerts" fill="hsl(0, 72%, 51%)" radius={[8, 8, 0, 0]} />
+                  <Tooltip {...tooltipStyle} />
+                  <Bar dataKey="alerts" radius={[12, 12, 0, 0]}>
+                    {cheatingAlertsData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={["#f87171", "#fbbf24", "#60a5fa", "#34d399", "#a78bfa"][index % 5]}
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -201,7 +217,7 @@ export default function Dashboard() {
                     cy="50%"
                     labelLine={false}
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    outerRadius={100}
+                    outerRadius={110}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -209,13 +225,7 @@ export default function Dashboard() {
                       <Cell key={index} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(0 0% 10%)",
-                      border: "1px solid hsl(0 0% 20%)",
-                      borderRadius: "8px",
-                    }}
-                  />
+                  <Tooltip {...tooltipStyle} />
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -230,18 +240,19 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={studentExamData} layout="vertical">
+                <BarChart data={studentExamData} layout="vertical" margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 20%)" />
                   <XAxis type="number" stroke="hsl(0 0% 60%)" />
-                  <YAxis dataKey="student" type="category" stroke="hsl(0 0% 60%)" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(0 0% 10%)",
-                      border: "1px solid hsl(0 0% 20%)",
-                      borderRadius: "8px",
-                    }}
-                  />
-                  <Bar dataKey="examsCompleted" fill="hsl(189, 94%, 43%)" radius={[0, 8, 8, 0]} />
+                  <YAxis dataKey="student" type="category" stroke="hsl(0 0% 60%)" interval={0} />
+                  <Tooltip {...tooltipStyle} />
+                  <Bar dataKey="examsCompleted" radius={[0, 12, 12, 0]}>
+                    {studentExamData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={["#60a5fa", "#f87171", "#fbbf24", "#34d399", "#a78bfa"][index % 5]}
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
