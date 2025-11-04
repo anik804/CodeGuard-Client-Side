@@ -43,7 +43,7 @@ export function StudentDashboardLayout() {
     <SidebarProvider defaultOpen>
       <div className="min-h-screen flex w-full bg-gradient-to-br from-indigo-50 via-white to-purple-50">
         {/* Sidebar */}
-        <div className="w-64 flex-shrink-0">
+        <div className="w-54 flex-shrink-0">
           <StudentDashboardSidebar />
         </div>
 

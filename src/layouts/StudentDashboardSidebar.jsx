@@ -48,9 +48,9 @@ export function StudentDashboardSidebar() {
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent>
         {/* Header */}
-        <div className="p-4 flex items-center gap-3 border-b border-border">
+        <div className="py-4 px-7 flex items-center gap-3 border-b border-border">
           <motion.div
-            className="w-29 h-12 rounded-lg bg-primary/20 flex items-center justify-center"
+            className="w-12 h-12 rounded-lg bg-primary/20 flex items-center justify-center"
             whileHover={{ scale: 1.05 }}
           >
             <GraduationCap className="w-6 h-6 text-primary" />
