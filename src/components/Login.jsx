@@ -32,26 +32,21 @@ const AuthPage = () => {
     resetRegister();
   };
 
-  // Redirect logged-in users automatically
   useEffect(() => {
     const storedRole = sessionStorage.getItem("role");
     if (storedRole === "examiner") navigate("/examiner-dashboard", { replace: true });
     if (storedRole === "student") navigate("/student-dashboard", { replace: true });
   }, [navigate]);
 
-  // ✅ Updated onRegister with Gmail verification
   const onRegister = async (data) => {
     try {
       const { email, password } = data;
-
-      // --- Check if email is a verified Google email ---
       const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
       if (!emailRegex.test(email)) {
         toast.error("Please use a verified Google email (e.g., yourname@gmail.com)");
         return;
       }
 
-      // --- Optional DNS check (to ensure Gmail servers respond) ---
       try {
         const checkRes = await fetch(`https://dns.google/resolve?name=gmail.com&type=MX`);
         const checkData = await checkRes.json();
@@ -59,11 +54,8 @@ const AuthPage = () => {
           toast.error("Unable to verify Google email. Try again.");
           return;
         }
-      } catch {
-        // Continue silently if DNS check fails
-      }
+      } catch {}
 
-      // --- Proceed with Firebase registration ---
       const firebaseUser = await createUser(email, password);
 
       const res = await fetch("http://localhost:3000/api/auth/register", {
@@ -89,7 +81,6 @@ const AuthPage = () => {
   const onLogin = async (data) => {
     try {
       let bodyData = { role, password: data.password };
-
       if (role === "student") bodyData.studentId = data.studentId;
       else if (role === "examiner") bodyData.username = data.username;
 
@@ -103,7 +94,6 @@ const AuthPage = () => {
 
       if (res.ok) {
         toast.success("Login successful!");
-
         if (role === "student") {
           sessionStorage.setItem("role", "student");
           sessionStorage.setItem("studentId", data.studentId);
@@ -124,38 +114,37 @@ const AuthPage = () => {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center bg-cover bg-center"
+      className="relative min-h-screen flex items-center justify-center bg-cover bg-center px-4 sm:px-6"
       style={{
         backgroundImage: "url('https://i.ibb.co/TxBhXYq4/c1-DYNu0y-B7.webp')",
       }}
     >
-      <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-lg flex flex-col md:flex-row w-[800px] overflow-hidden">
+      {/* Faded Overlay */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+
+      <div className="relative z-10 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg flex flex-col md:flex-row w-full max-w-4xl overflow-hidden">
         {/* Left Section */}
-        <div className="w-full md:w-1/2 bg-gray-100 flex flex-col justify-center items-center p-8">
+        <div className="w-full md:w-1/2 bg-gray-100 flex flex-col justify-center items-center p-6 sm:p-8">
           <img
             src="https://i.ibb.co/MDQ3jcf4/Png-Item-5916871.png"
             alt="IIUC Logo"
-            className="w-24 mb-4"
+            className="w-20 sm:w-24 mb-3 sm:mb-4"
           />
-          <h1 className="text-2xl font-bold">IIUC</h1>
-          <p className="text-gray-600 text-sm mt-2">CodeGuard - Secure Lab Exam</p>
+          <h1 className="text-xl sm:text-2xl font-bold">IIUC</h1>
+          <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2 text-center">CodeGuard - Secure Lab Exam</p>
 
-          <div className="mt-8 flex gap-4">
+          <div className="mt-6 sm:mt-8 flex gap-3 sm:gap-4 flex-wrap justify-center">
             <button
-              className={`px-4 py-2 font-medium rounded-md ${
-                activeTab === "login"
-                  ? "bg-indigo-500 text-white"
-                  : "bg-gray-200 text-gray-700"
+              className={`px-3 sm:px-4 py-2 font-medium rounded-md ${
+                activeTab === "login" ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-700"
               }`}
               onClick={() => setActiveTab("login")}
             >
               Login
             </button>
             <button
-              className={`px-4 py-2 font-medium rounded-md ${
-                activeTab === "register"
-                  ? "bg-indigo-500 text-white"
-                  : "bg-gray-200 text-gray-700"
+              className={`px-3 sm:px-4 py-2 font-medium rounded-md ${
+                activeTab === "register" ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-700"
               }`}
               onClick={() => setActiveTab("register")}
             >
@@ -165,7 +154,7 @@ const AuthPage = () => {
         </div>
 
         {/* Right Section */}
-        <div className="w-full md:w-1/2 p-8">
+        <div className="w-full md:w-1/2 p-6 sm:p-8">
           <AnimatePresence mode="wait">
             {activeTab === "login" && (
               <motion.form
@@ -177,10 +166,10 @@ const AuthPage = () => {
                 transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                <div className="flex gap-4 justify-center mb-4">
+                <div className="flex gap-3 sm:gap-4 justify-center mb-4 flex-wrap">
                   <button
                     type="button"
-                    className={`px-4 py-2 rounded-md font-medium ${
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${
                       role === "student"
                         ? "bg-indigo-500 text-white"
                         : "bg-gray-200 text-gray-700"
@@ -191,7 +180,7 @@ const AuthPage = () => {
                   </button>
                   <button
                     type="button"
-                    className={`px-4 py-2 rounded-md font-medium ${
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${
                       role === "examiner"
                         ? "bg-indigo-500 text-white"
                         : "bg-gray-200 text-gray-700"
@@ -227,15 +216,10 @@ const AuthPage = () => {
                   placeholder="Password"
                 />
                 {loginErrors.password && (
-                  <p className="text-red-500 text-sm">
-                    {loginErrors.password.message}
-                  </p>
+                  <p className="text-red-500 text-sm">{loginErrors.password.message}</p>
                 )}
 
-                <Button
-                  type="submit"
-                  className="w-full bg-indigo-500 hover:bg-indigo-600"
-                >
+                <Button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600">
                   LOGIN
                 </Button>
               </motion.form>
@@ -251,10 +235,10 @@ const AuthPage = () => {
                 transition={{ duration: 0.3 }}
                 className="space-y-4"
               >
-                <div className="flex gap-4 justify-center mb-4">
+                <div className="flex gap-3 sm:gap-4 justify-center mb-4 flex-wrap">
                   <button
                     type="button"
-                    className={`px-4 py-2 rounded-md font-medium ${
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${
                       role === "student"
                         ? "bg-indigo-500 text-white"
                         : "bg-gray-200 text-gray-700"
@@ -265,7 +249,7 @@ const AuthPage = () => {
                   </button>
                   <button
                     type="button"
-                    className={`px-4 py-2 rounded-md font-medium ${
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${
                       role === "examiner"
                         ? "bg-indigo-500 text-white"
                         : "bg-gray-200 text-gray-700"
@@ -283,9 +267,7 @@ const AuthPage = () => {
                       placeholder="Username"
                     />
                     <Input
-                      {...regRegister("designation", {
-                        required: "Designation required",
-                      })}
+                      {...regRegister("designation", { required: "Designation required" })}
                       placeholder="Designation"
                     />
                   </>
@@ -312,24 +294,17 @@ const AuthPage = () => {
                 {role === "student" && (
                   <>
                     <Input
-                      {...regRegister("studentId", {
-                        required: "Student ID required",
-                      })}
+                      {...regRegister("studentId", { required: "Student ID required" })}
                       placeholder="Student ID (e.g. C231109)"
                     />
                     <Input
-                      {...regRegister("section", {
-                        required: "Section required",
-                      })}
+                      {...regRegister("section", { required: "Section required" })}
                       placeholder="Section"
                     />
                   </>
                 )}
 
-                <Button
-                  type="submit"
-                  className="w-full bg-indigo-500 hover:bg-indigo-600"
-                >
+                <Button type="submit" className="w-full bg-indigo-500 hover:bg-indigo-600">
                   REGISTER
                 </Button>
               </motion.form>

@@ -48,15 +48,18 @@ export function DashboardSidebar() {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border">
-      <SidebarContent>
+    <Sidebar
+      collapsible="icon"
+      className="w-64 border-r border-border bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200"
+    >
+      <SidebarContent className="bg-gray-300">
         {/* Header */}
         <div className="p-4 flex items-center gap-3 border-b border-border">
           <motion.div
-            className="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center"
+            className="w-10 h-10 rounded-lg bg-blue-200/40 flex items-center justify-center"
             whileHover={{ scale: 1.05 }}
           >
-            <GraduationCap className="w-6 h-6 text-primary" />
+            <GraduationCap className="w-6 h-6 text-blue-700" />
           </motion.div>
 
           {open && (
@@ -79,16 +82,22 @@ export function DashboardSidebar() {
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
-                    <NavLink to={item.url}>
-                      <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-3 w-full"
-                      >
-                        <item.icon className="w-5 h-5" />
-                        {open && <span>{item.title}</span>}
-                      </motion.div>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                  >
+                    <NavLink
+                      to={item.url}
+                      className={({ isActive }) =>
+                        `flex items-center gap-3 w-full px-2 py-2 rounded-lg transition-colors duration-200 ${
+                          isActive
+                            ? "bg-blue-300 text-blue-900 font-semibold"
+                            : "text-blue-800 hover:bg-blue-200/50 hover:text-blue-900"
+                        }`
+                      }
+                    >
+                      <item.icon className="w-5 h-5" />
+                      {open && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -102,7 +111,7 @@ export function DashboardSidebar() {
           <Button
             onClick={handleLogout}
             variant="ghost"
-            className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+            className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-100"
           >
             <LogOut className="w-5 h-5" />
             {open && <span>Logout</span>}
