@@ -79,7 +79,7 @@ export function StudentDashboardContent({ onStudentNameChange }) {
   }, [searchQuery]);
 
   return (
-    <div className="w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="w-full mx-auto mt-40 p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left column: Join Room */}
       <div>
         {!hasJoined ? (

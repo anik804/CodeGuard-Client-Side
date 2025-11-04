@@ -47,9 +47,9 @@ export default function DashboardHome() {
   const examStats = {
     totalExams: 6,
     teachers: [
-      { name: "rahman@iiuc.ac.bd", exams: 2 },
+      { name: "irfan@iiuc.ac.bd", exams: 2 },
       { name: "tanvir@iiuc.ac.bd", exams: 3 },
-      { name: "sadia@iiuc.ac.bd", exams: 1 },
+      { name: "jamil@iiuc.ac.bd", exams: 1 },
     ],
     courses: [
       { name: "Data Structure", exams: 2 },
@@ -175,7 +175,7 @@ export default function DashboardHome() {
       </div>
 
       {/* 🔹 Exam Dates List */}
-      <div className="bg-white border border-gray-100 shadow-md rounded-xl p-4 mt-8">
+      {/* <div className="bg-white border border-gray-100 shadow-md rounded-xl p-4 mt-8">
         <h3 className="text-lg font-semibold text-center text-purple-600 mb-4">Exam History (Date-wise)</h3>
         <ul className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 text-center">
           {examStats.examDates.map((date, i) => (
@@ -184,7 +184,7 @@ export default function DashboardHome() {
             </li>
           ))}
         </ul>
-      </div>
+      </div> */}
     </motion.div>
   );
 }
