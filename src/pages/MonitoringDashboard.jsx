@@ -1,177 +1,305 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import Peer from "simple-peer";
 import io from "socket.io-client";
+import axios from "axios";
 
-import { Bell, Clock, HeartPulse, ScreenShare, Users, Video } from "lucide-react";
-import StudentVideo from "../components/StudentVideo";
+import { toast } from "sonner";
+import { useWebRTC } from "../hooks/useWebRTC";
+import { formatTime } from "../utils/timeFormatter";
+
+// Components
+import { MonitoringHeader } from "../components/monitoring/MonitoringHeader";
+import { ExamInfoSection } from "../components/monitoring/ExamInfoSection";
+import { StatsSection } from "../components/monitoring/StatsSection";
+import { MonitoringSidebar } from "../components/monitoring/MonitoringSidebar";
+import { StudentVideoGrid } from "../components/monitoring/StudentVideoGrid";
 import { Button } from "../components/ui/button";
-
-// Polyfill global for simple-peer in browser
-if (typeof global === "undefined") {
-  window.global = window;
-}
+import { Users } from "lucide-react";
 
 export default function MonitoringDashboardPage() {
-  const { roomId } = useParams(); 
+  const { roomId } = useParams();
   const [peers, setPeers] = useState([]);
+  const [examStarted, setExamStarted] = useState(false);
+  const [timer, setTimer] = useState(0); // Session timer in seconds
+  const [examCountdown, setExamCountdown] = useState(0); // Exam countdown in seconds
+  const [students, setStudents] = useState([]); // List of joined students
+  const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar - start collapsed
+  const [questionFile, setQuestionFile] = useState(null);
+  const [questionUrl, setQuestionUrl] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [examDetails, setExamDetails] = useState(null);
+  const [flaggedStudents, setFlaggedStudents] = useState(new Set()); // Track students with illegal sites
   const socketRef = useRef(null);
-  const peersRef = useRef([]);
+  const timerRef = useRef(null);
+  const fileInputRef = useRef(null);
 
+  // WebRTC hook
+  const { peersRef, setupWebRTCHandlers, cleanup: cleanupWebRTC } = useWebRTC(
+    socketRef,
+    setPeers,
+    setStudents
+  );
+
+  // Calculate exam countdown based on exam duration
+  useEffect(() => {
+    if (examStarted && examDetails?.examDuration) {
+      const examDurationSeconds = examDetails.examDuration * 60;
+      const remaining = Math.max(0, examDurationSeconds - timer);
+      setExamCountdown(remaining);
+    } else {
+      setExamCountdown(0);
+    }
+  }, [timer, examStarted, examDetails?.examDuration]);
+
+  // --- Main useEffect ---
   useEffect(() => {
     if (!roomId || typeof window === "undefined") return;
 
-    // Connect to Socket.IO server
-    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
+    socketRef.current = io("http://localhost:3000");
 
-    // Join the room as an examiner
+    // Note: Logs are now fetched by ActivityLog component with pagination
+
+    // Fetch exam details
+    fetch(`http://localhost:3000/api/rooms/${roomId}/exam-details`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.room) {
+          setExamDetails(data.room);
+        }
+      })
+      .catch((err) => console.error("Failed to fetch exam details:", err));
+
+    // Fetch existing question if any
+    fetch(`http://localhost:3000/api/rooms/${roomId}/question`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.hasQuestion) {
+          setQuestionUrl("uploaded");
+        }
+      })
+      .catch((err) => console.error("Failed to fetch question:", err));
+
+    // Join room as examiner
     socketRef.current.emit("examiner-join-room", { roomId });
 
-    // Handle new student joining
-    const handleStudentJoined = ({ studentId }) => {
-      console.log(`👩‍🎓 Student ${studentId} joined.`);
+    // --- WebRTC: Handle student joining ---
+    // Receive current student list
+    socketRef.current.on("current-students", (studentList) => {
+      setStudents(studentList);
+    });
 
-      const peer = new Peer({
-            initiator: true, // examiner is initiator
-            trickle: true, // incremental ICE candidates
-            stream: null, // examiner does not send a stream
-            config: {
-              iceServers: [
-                { urls: ["stun:bn-turn2.xirsys.com"] },
-                {
-                  username:
-                    "J4u6YIUf1k35iq4q0pS1BfFWOC4UUQy25eT5ZsDsWdETzfXFw0TYZL4etEHu7VrnAAAAAGjmYQ5NdXNoZmlx",
-                  credential: "2403ae1a-a447-11f0-9415-0242ac140004",
-                  urls: [
-                    "turn:bn-turn2.xirsys.com:80?transport=udp",
-                    "turn:bn-turn2.xirsys.com:3478?transport=udp",
-                    "turn:bn-turn2.xirsys.com:80?transport=tcp",
-                    "turn:bn-turn2.xirsys.com:3478?transport=tcp",
-                    "turns:bn-turn2.xirsys.com:443?transport=tcp",
-                    "turns:bn-turn2.xirsys.com:5349?transport=tcp",
-                  ],
-                },
-              ],
-            },
-          });
+    socketRef.current.on("student-joined", (studentInfo) => {
+      console.log(`👩‍🎓 Student ${studentInfo.name} (${studentInfo.studentId}) joined.`);
+      setStudents((prev) => [...prev, studentInfo]);
+      toast.success(`${studentInfo.name} joined the exam`);
+    });
 
-      // Send signaling data to student
-      peer.on("signal", (signalData) => {
-        socketRef.current.emit("send-signal", {
-          to: studentId,
-          signal: signalData,
+    // Setup WebRTC handlers
+    setupWebRTCHandlers();
+
+    // Handle flagged events
+    socketRef.current.on("student-flagged", (log) => {
+      console.log("🚨 Flagged Activity:", log);
+      // Add student to flagged set for red border
+      setFlaggedStudents((prev) => new Set([...prev, log.studentId]));
+      // Show notification toast
+      toast.error(`🚨 Student ${log.studentId} visited illegal site!`, {
+        duration: 5000,
+      });
+      // Remove red border after 30 seconds
+      setTimeout(() => {
+        setFlaggedStudents((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(log.studentId);
+          return newSet;
         });
-      });
-
-      // Receive remote stream from student
-      peer.on("stream", (remoteStream) => {
-        const peerState = peersRef.current.find((p) => p.peerId === studentId);
-        if (peerState) {
-          peerState.stream = remoteStream;
-          setPeers([...peersRef.current]);
-        }
-      });
-
-      peer.on("error", (err) => console.error("Peer error:", err));
-
-      const newPeer = { peerId: studentId, peer, stream: null };
-      peersRef.current.push(newPeer);
-      setPeers([...peersRef.current]);
-    };
-
-    socketRef.current.on("student-joined", handleStudentJoined);
-
-    // Receive signaling data from students
-    socketRef.current.on("receive-signal", ({ signal, from }) => {
-      const peerItem = peersRef.current.find((p) => p.peerId === from);
-      if (peerItem) peerItem.peer.signal(signal);
+      }, 30000);
     });
 
-    // Handle student leaving
-    socketRef.current.on("student-left", (studentId) => {
-      console.log(`❌ Student ${studentId} left.`);
-      const peerItem = peersRef.current.find((p) => p.peerId === studentId);
-      peerItem?.peer.destroy();
-      const newPeers = peersRef.current.filter((p) => p.peerId !== studentId);
-      peersRef.current = newPeers;
-      setPeers(newPeers);
-    });
-
-    // Cleanup on unmount
     return () => {
       socketRef.current?.disconnect();
-      peersRef.current.forEach((p) => p.peer.destroy());
+      cleanupWebRTC();
+      clearInterval(timerRef.current);
     };
   }, [roomId]);
 
-  const activeStudents = peers.length;
+  // --- Upload exam question ---
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      setQuestionFile(file);
+    } else {
+      toast.error("Please select a PDF file");
+    }
+  };
+
+  const handleUploadQuestion = async () => {
+    if (!questionFile) {
+      toast.error("Please select a PDF file first");
+      return;
+    }
+
+    console.log("📤 Starting PDF upload...");
+    console.log("📤 File details:", {
+      name: questionFile.name,
+      type: questionFile.type,
+      size: questionFile.size
+    });
+
+    // Validate file type on frontend
+    if (questionFile.type !== 'application/pdf') {
+      toast.error("Please select a PDF file");
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append('question', questionFile);
+
+    try {
+      console.log(`📤 Uploading to: http://localhost:3000/api/rooms/${roomId}/question`);
+      
+      const response = await axios.post(
+        `http://localhost:3000/api/rooms/${roomId}/question`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      console.log("📤 Upload response:", response.data);
+
+      if (response.data.success) {
+        // PDF is now stored in MongoDB, so we just mark it as uploaded
+        setQuestionUrl("uploaded"); // Mark as uploaded (we'll use roomId to fetch)
+        console.log("✅ Upload successful! File:", response.data.fileName);
+        toast.success("Exam question uploaded successfully!");
+        
+        // If exam is already started, notify students immediately
+        if (examStarted && socketRef.current) {
+          socketRef.current.emit("question-uploaded", { roomId });
+          toast.info("Question sent to all students!");
+        }
+      } else {
+        console.error("❌ Upload failed:", response.data);
+        toast.error(response.data.message || "Failed to upload question");
+      }
+    } catch (error) {
+      console.error("❌ Upload error:", error);
+      console.error("❌ Error response:", error.response?.data);
+      toast.error(error.response?.data?.message || error.message || "Failed to upload question");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // --- Exam control functions ---
+  const startExam = async () => {
+    // Allow starting exam without question - examiner can upload later
+    try {
+      // Update exam started time in database
+      if (examDetails) {
+        await fetch(`http://localhost:3000/api/rooms/${roomId}/exam-details`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            courseName: examDetails.courseName,
+            examDuration: examDetails.examDuration
+          })
+        });
+      }
+
+      // Emit exam-start - if question exists, it will be sent to students
+      socketRef.current.emit("exam-start", { roomId });
+      setExamStarted(true);
+      timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
+      
+      // Check if question exists
+      const response = await fetch(`http://localhost:3000/api/rooms/${roomId}/question`);
+      const data = await response.json();
+      
+      if (data.success && data.hasQuestion) {
+        toast.success("Exam started! Questions sent to all students.");
+      } else {
+        toast.success("Exam started! You can upload questions anytime during the exam.");
+      }
+      console.log("✅ Exam started for room:", roomId);
+    } catch (error) {
+      console.error("Error starting exam:", error);
+      toast.error("Failed to start exam. Please try again.");
+    }
+  };
+
+  const endExam = () => {
+    socketRef.current.emit("exam-end", { roomId });
+    setExamStarted(false);
+    clearInterval(timerRef.current);
+    setTimer(0);
+    cleanupWebRTC();
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm p-3 flex justify-between items-center">
-        <div>
-          <h1 className="text-xl font-bold">
-            International Islamic University Chittagong
-          </h1>
-          <p className="text-sm text-gray-600">
-            Real-Time Proctoring Dashboard - Computer Lab Examination
-          </p>
-        </div>
+    <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
+      <MonitoringHeader
+        roomId={roomId}
+        examDetails={examDetails}
+        examStarted={examStarted}
+        timer={timer}
+        examCountdown={examCountdown}
+        questionFile={questionFile}
+        questionUrl={questionUrl}
+        uploading={uploading}
+        fileInputRef={fileInputRef}
+        onFileSelect={handleFileSelect}
+        onUploadQuestion={handleUploadQuestion}
+        onStartExam={startExam}
+        onEndExam={endExam}
+      />
 
-        <div className="flex items-center space-x-4">
-          <span className="flex items-center text-sm text-green-600">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-            System Active
-          </span>
-          <Button className="bg-green-600 hover:bg-green-700">Start Exam Session</Button>
-          <Button variant="destructive">End Session</Button>
+      <ExamInfoSection examDetails={examDetails} />
 
-          <div className="text-right">
-            <p className="font-mono text-lg">{new Date().toLocaleTimeString("en-GB")}</p>
-            <p className="text-xs text-gray-500">Session Time</p>
-          </div>
-        </div>
-      </header>
+      <StatsSection
+        activeStudents={peers.length}
+        totalStudents={students.length}
+        logsCount={flaggedStudents.size}
+        timer={timer}
+        examStarted={examStarted}
+      />
 
-      {/* Main Content */}
-      <main className="p-6">
-        <h2 className="text-xl font-bold mb-4">Dashboard Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard icon={<Users className="text-blue-500" />} title="Active Students" value={activeStudents.toString()} footer="+2 from last exam" />
-          <StatCard icon={<Bell className="text-red-500" />} title="Active Alerts" value="3" footer="Requires attention" requiresAttention />
-          <StatCard icon={<HeartPulse className="text-green-500" />} title="System Health" value="98%" footer="All systems operational" />
-          <StatCard icon={<Clock className="text-purple-500" />} title="Session Duration" value="2h 15m" footer="45 minutes remaining" />
-        </div>
+      {/* Main */}
+      <main className="flex flex-1 p-4 md:p-6 gap-4 md:gap-6 relative flex-col lg:flex-row">
+        <MonitoringSidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          roomId={roomId}
+          flaggedStudents={flaggedStudents}
+        />
 
-        {/* Live Student Monitoring */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Live Student Monitoring</h2>
-          <div className="flex items-center space-x-2">
-            <Button variant="outline"><ScreenShare className="w-4 h-4 mr-2" /> Full Screen View</Button>
-            <Button className="bg-green-600 hover:bg-green-700"><Video className="w-4 h-4 mr-2" /> Project to Main Screen</Button>
-          </div>
-        </div>
+        <Button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className={`fixed right-4 z-30 shadow-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-2 h-9 px-3 transition-all duration-300 ${
+            sidebarOpen ? 'top-[calc(100vh-4rem)]' : 'top-20'
+          }`}
+        >
+          <Users className="w-4 h-4 text-cyan-400" />
+          <span className="text-xs font-medium">{sidebarOpen ? 'Close Panel' : 'View Panel'}</span>
+          {flaggedStudents.size > 0 && (
+            <span className="px-1.5 py-0.5 bg-red-600 text-white text-xs font-semibold rounded">
+              {flaggedStudents.size}
+            </span>
+          )}
+        </Button>
 
-        {/* Student Video Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {peers.map((p) => p.stream ? <StudentVideo key={p.peerId} peer={p.peer} stream={p.stream} /> : null)}
-        </div>
+        <StudentVideoGrid
+          peers={peers}
+          students={students}
+          flaggedStudents={flaggedStudents}
+          sidebarOpen={sidebarOpen}
+          activityLogOpen={false}
+        />
       </main>
-    </div>
-  );
-}
-
-// --- Helper Component ---
-function StatCard({ icon, title, value, footer, requiresAttention = false }) {
-  return (
-    <div className="bg-white p-5 rounded-lg shadow flex justify-between items-center">
-      <div>
-        <p className="text-sm text-gray-500">{title}</p>
-        <p className="text-3xl font-bold">{value}</p>
-        <p className={`text-xs ${requiresAttention ? "text-red-500" : "text-gray-400"}`}>{footer}</p>
-      </div>
-      <div className="bg-gray-100 p-3 rounded-full">{icon}</div>
     </div>
   );
 }

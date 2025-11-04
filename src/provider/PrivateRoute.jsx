@@ -1,28 +1,25 @@
-// PrivateRoute.jsx
-import React, { useContext } from "react";
-import { AuthContext } from "./AuthProvider";
+import { useContext } from "react";
 import { Navigate, useLocation } from "react-router";
+import { AuthContext } from "./AuthProvider";
 
 const PrivateRoute = ({ children, allowedRoles }) => {
-  const { user, loading } = useContext(AuthContext);
+  const { loading } = useContext(AuthContext);
   const location = useLocation();
+
+  const storedRole = sessionStorage.getItem("role");
 
   if (loading)
     return (
       <div className="flex justify-center items-center h-screen gap-2">
-        <span className="loading loading-infinity loading-xs"></span>
-        <span className="loading loading-infinity loading-sm"></span>
-        <span className="loading loading-infinity loading-md"></span>
         <span className="loading loading-infinity loading-lg"></span>
-        <span className="loading loading-infinity loading-xl"></span>
       </div>
     );
 
-  if (user && allowedRoles?.includes(user.role)) {
+  if (storedRole && (!allowedRoles || allowedRoles.includes(storedRole))) {
     return children;
   }
 
-  return <Navigate to="/auth/login" state={{ from: location }} />;
+  return <Navigate to="/auth/login" state={{ from: location }} replace />;
 };
 
 export default PrivateRoute;

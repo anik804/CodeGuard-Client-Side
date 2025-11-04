@@ -38,9 +38,11 @@ export function ExaminerDashboardContent({ username }) {
 
     setIsLoading(true);
     try {
-      const response = await axios.post('https://codeguard-server-side-walb.onrender.com/rooms', {
+      const response = await axios.post('http://localhost:3000/api/rooms', {
         roomId: roomId,
-        password: roomPassword
+        password: roomPassword,
+        courseName: examName,
+        examDuration: examDuration
       });
 
       if (response.status === 201) {
