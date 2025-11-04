@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MonitorPlay, Download, FileText, Eye } from "lucide-react";
+import { MonitorPlay, Download, FileText, Eye, ExternalLink } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
 import io from "socket.io-client";
@@ -60,9 +60,37 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       toast.success("Exam started! Questions are now available.");
     });
 
-    socketRef.current.on("exam-ended", () => {
+    socketRef.current.on("exam-ended", (data) => {
       setExamStartedByExaminer(false);
-      toast.info("Exam has ended.");
+      toast.info(data?.message || "Exam has ended.");
+      
+      // Stop screen sharing and disconnect
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      if (peerRef.current) {
+        peerRef.current.destroy();
+        peerRef.current = null;
+      }
+      setIsSharing(false);
+      setExamStarted(false);
+    });
+
+    // Handle force disconnect
+    socketRef.current.on("force-disconnect", () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
+      if (peerRef.current) {
+        peerRef.current.destroy();
+        peerRef.current = null;
+      }
+      setIsSharing(false);
+      setExamStarted(false);
+      socketRef.current?.disconnect();
+      toast.error("You have been disconnected from the exam.");
     });
 
     // ✅ Handle examiner signal for WebRTC
@@ -247,75 +275,108 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                   <Button
                     onClick={async () => {
                       try {
-                        // Get token from localStorage or sessionStorage (optional - for future auth)
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
                         const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
                         
-                        // Show loading toast
-                        const loadingToast = toast.loading("Preparing PDF download...");
-                        
-                        // Prepare headers - include token if available
+                        const loadingToast = toast.loading("Preparing PDF view...");
                         const headers = {};
-                        
                         if (token) {
                           headers['Authorization'] = `Bearer ${token}`;
                         }
                         
-                        console.log("Downloading PDF from:", proxyUrl);
-                        
-                        // Fetch the PDF as blob to ensure proper download
                         const response = await fetch(proxyUrl, {
                           method: 'GET',
                           headers: headers,
-                          credentials: 'include' // Include cookies if any
+                          credentials: 'include'
                         });
                         
-                        console.log("Response status:", response.status, response.statusText);
-                        
                         if (!response.ok) {
-                          // Try to get error message from response
-                          let errorMessage = "Failed to download PDF";
+                          let errorMessage = "Failed to get view link";
                           try {
                             const errorData = await response.json();
                             errorMessage = errorData.message || errorData.error || errorMessage;
-                            console.error("Error response:", errorData);
                           } catch (e) {
-                            // If response is not JSON, use status text
                             errorMessage = response.statusText || errorMessage;
                           }
                           toast.dismiss(loadingToast);
                           toast.error(errorMessage);
-                          console.error("PDF download failed:", response.status, errorMessage);
                           return;
                         }
                         
-                        // Check if response is actually a PDF
-                        const contentType = response.headers.get('content-type');
-                        if (!contentType || !contentType.includes('application/pdf')) {
+                        const data = await response.json();
+                        
+                        if (data.success && data.url) {
+                          // Open PDF in new tab for viewing
+                          window.open(data.url, '_blank');
                           toast.dismiss(loadingToast);
-                          toast.error("Invalid file format received");
+                          toast.success("PDF opened in new tab");
+                        } else {
+                          toast.dismiss(loadingToast);
+                          toast.error("Invalid response from server");
+                        }
+                      } catch (error) {
+                        console.error("Error viewing PDF:", error);
+                        toast.error("Failed to view PDF. Please try again.");
+                      }
+                    }}
+                    variant="outline"
+                    className="flex items-center space-x-2 border-2 hover:bg-blue-50 border-blue-300"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>View PDF</span>
+                  </Button>
+                  
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem("token") || sessionStorage.getItem("token");
+                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
+                        
+                        const loadingToast = toast.loading("Preparing PDF download...");
+                        const headers = {};
+                        if (token) {
+                          headers['Authorization'] = `Bearer ${token}`;
+                        }
+                        
+                        const response = await fetch(proxyUrl, {
+                          method: 'GET',
+                          headers: headers,
+                          credentials: 'include'
+                        });
+                        
+                        if (!response.ok) {
+                          let errorMessage = "Failed to get download link";
+                          try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.message || errorData.error || errorMessage;
+                          } catch (e) {
+                            errorMessage = response.statusText || errorMessage;
+                          }
+                          toast.dismiss(loadingToast);
+                          toast.error(errorMessage);
                           return;
                         }
                         
-                        const blob = await response.blob();
+                        const data = await response.json();
                         
-                        // Create a blob URL and trigger download (no navigation)
-                        const blobUrl = window.URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = blobUrl;
-                        link.download = `exam-questions-${roomId}.pdf`;
-                        link.style.display = 'none'; // Hide the link
-                        
-                        // Temporarily add to body, click, then remove
-                        document.body.appendChild(link);
-                        link.click();
-                        
-                        // Clean up immediately
-                        document.body.removeChild(link);
-                        window.URL.revokeObjectURL(blobUrl);
-                        
-                        toast.dismiss(loadingToast);
-                        toast.success("PDF download started");
+                        if (data.success && data.url) {
+                          // Trigger download
+                          const link = document.createElement('a');
+                          link.href = data.url;
+                          link.download = data.fileName || `exam-questions-${roomId}.pdf`;
+                          link.target = '_blank';
+                          link.style.display = 'none';
+                          
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          
+                          toast.dismiss(loadingToast);
+                          toast.success("PDF download started");
+                        } else {
+                          toast.dismiss(loadingToast);
+                          toast.error("Invalid response from server");
+                        }
                       } catch (error) {
                         console.error("Error downloading PDF:", error);
                         toast.error("Failed to download PDF. Please try again.");

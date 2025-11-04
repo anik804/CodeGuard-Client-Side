@@ -40,7 +40,9 @@ export function ExaminerDashboardContent({ username }) {
     try {
       const response = await axios.post('http://localhost:3000/api/rooms', {
         roomId: roomId,
-        password: roomPassword
+        password: roomPassword,
+        courseName: examName,
+        examDuration: examDuration
       });
 
       if (response.status === 201) {
