@@ -1,16 +1,27 @@
 import { useEffect, useState } from 'react';
-import { ExamInstructions } from '../components/ExamInstruction';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 
 export function StudentDashboardContent({ onStudentNameChange }) {
+  const navigate = useNavigate();
   const [roomId, setRoomId] = useState('');
   const [password, setPassword] = useState('');
-  const [hasJoined, setHasJoined] = useState(false);
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('Student');
+
+  useEffect(() => {
+    // Get student name from sessionStorage
+    const storedName = sessionStorage.getItem('studentName');
+    const storedId = sessionStorage.getItem('studentId');
+    if (storedName) {
+      setUsername(storedName);
+    } else if (storedId) {
+      setUsername(storedId);
+    }
+  }, []);
 
   const fakeExams = [
     { id: 1, course: 'Data Structures', examiner: 'Dr. Rahman', date: '2025-10-01', score: 85 },
@@ -60,14 +71,40 @@ export function StudentDashboardContent({ onStudentNameChange }) {
     }
   }, []);
 
-  const handleJoinRoom = (e) => {
+  const handleJoinRoom = async (e) => {
     e.preventDefault();
     if (!roomId || !password) {
       alert('Please fill in both Room ID and Password.');
       return;
     }
-    setHasJoined(true);
-    sessionStorage.setItem('roomId', roomId);
+    
+    setLoading(true);
+    try {
+      // Validate room credentials
+      const response = await fetch('http://localhost:3000/api/rooms/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          roomId,
+          password,
+          studentId: sessionStorage.getItem('studentId')
+        })
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        sessionStorage.setItem('roomId', roomId);
+        // Navigate to exam instructions page
+        navigate(`/student-dashboard/exam/${roomId}`);
+      } else {
+        alert(data.message || 'Invalid credentials.');
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error joining room:', error);
+      alert('Failed to join room. Please try again.');
+      setLoading(false);
+    }
   };
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
@@ -82,54 +119,45 @@ export function StudentDashboardContent({ onStudentNameChange }) {
     <div className="w-full mx-auto mt-40 p-4 grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Left column: Join Room */}
       <div>
-        {!hasJoined ? (
-          <Card className="shadow-xl">
-            <CardHeader>
-              <CardTitle className="text-center text-2xl h-28 font-bold text-gray-800 pt-6">
-                Join an Exam Room
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pb-8">
-              <form onSubmit={handleJoinRoom} className="space-y-4">
-                <div className="space-y-1">
-                  <Label htmlFor="room-id">Room ID</Label>
-                  <Input
-                    id="room-id"
-                    placeholder="Enter Room ID"
-                    value={roomId}
-                    onChange={(e) => setRoomId(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="Enter Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-black hover:bg-black text-white py-4 mt-2"
-                >
-                  {loading ? 'Validating...' : 'Join Room'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        ) : (
-          <ExamInstructions
-            courseName="CSE-2321 Lab Final - Data Structure"
-            durationMinutes={90}
-            roomId={roomId}
-            username={username}
-          />
-        )}
+        <Card className="shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-center text-2xl h-28 font-bold text-gray-800 pt-6">
+              Join an Exam Room
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pb-8">
+            <form onSubmit={handleJoinRoom} className="space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="room-id">Room ID</Label>
+                <Input
+                  id="room-id"
+                  placeholder="Enter Room ID"
+                  value={roomId}
+                  onChange={(e) => setRoomId(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-black hover:bg-black text-white py-4 mt-2"
+              >
+                {loading ? 'Validating...' : 'Join Room'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Right column: Past Exams */}

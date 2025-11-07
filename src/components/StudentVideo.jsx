@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
-import { Maximize2, Minimize2, User } from "lucide-react";
+import { Maximize2, Minimize2, User, X } from "lucide-react";
 import { Button } from "./ui/button";
 
-const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A", isFlagged = false }) => {
+const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A", isFlagged = false, onDismissFlag }) => {
   const ref = useRef(null);
   const containerRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -67,12 +67,24 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
   return (
     <div 
       ref={containerRef}
-      className={`bg-white rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 ${
+      className={`bg-white rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 relative ${
         isFullscreen ? "fixed inset-0 z-50 rounded-none" : "hover:shadow-xl"
       } ${
-        isFlagged ? "ring-4 ring-red-500 ring-offset-2 animate-pulse" : ""
+        isFlagged ? "ring-4 ring-red-500 ring-offset-2" : ""
       }`}
     >
+      {isFlagged && onDismissFlag && (
+        <Button
+          onClick={() => onDismissFlag(studentId)}
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white border border-red-600 rounded-md h-7 px-2 text-xs font-medium shadow-lg"
+          title="Dismiss false alarm"
+        >
+          <X className="w-3 h-3 mr-1" />
+          Dismiss
+        </Button>
+      )}
       <div className={`relative bg-gradient-to-br from-gray-900 to-black flex justify-center items-center aspect-video group ${
         isFlagged ? "ring-4 ring-red-500" : ""
       }`}>
@@ -120,7 +132,7 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
         <div className="mt-2 flex items-center space-x-2">
           {isFlagged ? (
             <>
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
               <p className="text-xs text-red-600 font-medium">⚠️ Flagged Activity</p>
             </>
           ) : (

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { CheckCircle, FileText, AlertTriangle, Award } from "lucide-react";
+import { CheckCircle, FileText, AlertTriangle, Award, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Chart as ChartJS,
@@ -12,8 +12,11 @@ import {
   BarElement,
   LineElement,
   PointElement,
+  Title,
+  Filler,
 } from "chart.js";
 import { Pie, Bar, Doughnut, Line } from "react-chartjs-2";
+import { api } from "../utils/api";
 
 ChartJS.register(
   ArcElement,
@@ -23,18 +26,57 @@ ChartJS.register(
   LinearScale,
   BarElement,
   LineElement,
-  PointElement
+  PointElement,
+  Title,
+  Filler
 );
 
-export default function DashboardHome() {
-  const [username, setUsername] = useState("Student");
+export default function StudentDashboard2() {
+  const [loading, setLoading] = useState(true);
+  const [analytics, setAnalytics] = useState(null);
+  const [error, setError] = useState(null);
+  const [studentId, setStudentId] = useState(null);
+  const [studentName, setStudentName] = useState("Student");
 
-  const stats = [
-    { title: "Exams Attended", value: "5", icon: CheckCircle, color: "bg-primary/20 text-primary" },
-    { title: "Exams Available", value: "8", icon: FileText, color: "bg-cyan-500/20 text-cyan-400" },
-    { title: "Activity Alerts", value: "2", icon: AlertTriangle, color: "bg-destructive/20 text-destructive" },
-    { title: "Average Score", value: "87.6%", icon: Award, color: "bg-green-500/20 text-green-400" },
-  ];
+  useEffect(() => {
+    // Get student name from sessionStorage
+    const storedName = sessionStorage.getItem("studentName");
+    const storedId = sessionStorage.getItem("studentId");
+    if (storedName) {
+      setStudentName(storedName);
+    } else if (storedId) {
+      setStudentName(storedId);
+    }
+  }, []);
+
+  useEffect(() => {
+    const storedStudentId = sessionStorage.getItem("studentId");
+    if (storedStudentId) {
+      setStudentId(storedStudentId);
+      fetchStudentAnalytics(storedStudentId);
+    } else {
+      setError("Student ID not found. Please log in again.");
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchStudentAnalytics = async (id) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await api.getStudentAnalytics(id);
+      if (response.success) {
+        setAnalytics(response.data);
+      } else {
+        setError("Failed to load analytics");
+      }
+    } catch (err) {
+      console.error("Error fetching student analytics:", err);
+      setError("Failed to load analytics. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -43,87 +85,228 @@ export default function DashboardHome() {
 
   const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
-  // 🔹 Fake dashboard data
-  const examStats = {
-    totalExams: 6,
-    teachers: [
-      { name: "irfan@iiuc.ac.bd", exams: 2 },
-      { name: "tanvir@iiuc.ac.bd", exams: 3 },
-      { name: "jamil@iiuc.ac.bd", exams: 1 },
-    ],
-    courses: [
-      { name: "Data Structure", exams: 2 },
-      { name: "Algorithms", exams: 1 },
-      { name: "DBMS", exams: 1 },
-      { name: "OOP", exams: 2 },
-    ],
-    examDates: ["2025-05-02", "2025-06-14", "2025-07-21", "2025-09-03", "2025-09-28", "2025-10-15"],
-    scores: [65, 70, 80, 85, 90, 88],
-    examTypes: { MCQ: 4, Written: 2 },
-  };
-
-  // 📊 Pie Chart (Exams per Course)
-  const pieData = {
-    labels: examStats.courses.map((c) => c.name),
-    datasets: [
-      {
-        data: examStats.courses.map((c) => c.exams),
-        backgroundColor: ["#4f46e5", "#10b981", "#f59e0b", "#ef4444"],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  // 📊 Bar Chart (Exams per Teacher)
-  const barData = {
-    labels: examStats.teachers.map((t) => t.name),
-    datasets: [
-      {
-        label: "Exams Given",
-        data: examStats.teachers.map((t) => t.exams),
-        backgroundColor: "#10b981",
-      },
-    ],
-  };
-
-  const barOptions = {
+  // Chart options with animations
+  const chartOptions = {
     responsive: true,
-    plugins: { legend: { display: false }, tooltip: { enabled: true } },
-    scales: { y: { beginAtZero: true }, x: { ticks: { font: { size: 12 } } } },
-  };
-
-  // 📈 Line Chart (Scores Over Time)
-  const lineData = {
-    labels: examStats.examDates,
-    datasets: [
-      {
-        label: "Exam Scores",
-        data: examStats.scores,
-        borderColor: "#6366f1",
-        backgroundColor: "rgba(99, 102, 241, 0.2)",
-        tension: 0.4,
-        fill: true,
-        pointRadius: 5,
+    maintainAspectRatio: false,
+    animation: {
+      duration: 2000,
+      easing: "easeInOutQuart",
+    },
+    plugins: {
+      legend: {
+        position: "top",
+        labels: {
+          font: { size: 12 },
+          padding: 15,
+        },
       },
-    ],
-  };
-
-  // 🍩 Doughnut Chart (Exam Type Distribution)
-  const doughnutData = {
-    labels: ["MCQ Exams", "Written Exams"],
-    datasets: [
-      {
-        data: [examStats.examTypes.MCQ, examStats.examTypes.Written],
-        backgroundColor: ["#10b981", "#f59e0b"],
+      tooltip: {
+        backgroundColor: "rgba(0, 0, 0, 0.8)",
+        titleColor: "#ffffff",
+        bodyColor: "#ffffff",
+        borderColor: "rgba(255, 255, 255, 0.1)",
         borderWidth: 1,
+        padding: 12,
+        cornerRadius: 8,
       },
-    ],
+    },
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+          <p className="text-muted-foreground">Loading your analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !analytics) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <AlertTriangle className="w-8 h-8 mx-auto mb-4 text-destructive" />
+          <p className="text-muted-foreground mb-4">{error}</p>
+          {studentId && (
+            <button
+              onClick={() => fetchStudentAnalytics(studentId)}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+            >
+              Retry
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Prepare stats
+  const stats = analytics
+    ? [
+        {
+          title: "Exams Attended",
+          value: analytics.totalExamsAttended || 0,
+          icon: CheckCircle,
+          color: "bg-primary/20 text-primary",
+        },
+        {
+          title: "Flags Received",
+          value: analytics.totalFlagsReceived || 0,
+          icon: AlertTriangle,
+          color: "bg-destructive/20 text-destructive",
+        },
+        {
+          title: "Currently In Exam",
+          value: analytics.isCurrentlyInExam ? "Yes" : "No",
+          icon: FileText,
+          color: analytics.isCurrentlyInExam
+            ? "bg-cyan-500/20 text-cyan-400"
+            : "bg-gray-500/20 text-gray-400",
+        },
+        {
+          title: "Average Flags/Exam",
+          value:
+            analytics.totalExamsAttended > 0
+              ? (
+                  analytics.totalFlagsReceived / analytics.totalExamsAttended
+                ).toFixed(1)
+              : "0",
+          icon: Award,
+          color: "bg-green-500/20 text-green-400",
+        },
+      ]
+    : [];
+
+  // Flags per exam chart data
+  const flagsPerExamData = analytics?.flagsPerExam?.length > 0
+    ? {
+        labels: analytics.flagsPerExam.map((exam) => exam.examName || exam.courseName || exam.roomId),
+        datasets: [
+          {
+            label: "Flags Received",
+            data: analytics.flagsPerExam.map((exam) => exam.flagsCount),
+            backgroundColor: [
+              "rgba(99, 102, 241, 0.8)",
+              "rgba(236, 72, 153, 0.8)",
+              "rgba(59, 130, 246, 0.8)",
+              "rgba(168, 85, 247, 0.8)",
+              "rgba(34, 211, 238, 0.8)",
+            ],
+            borderColor: [
+              "rgb(99, 102, 241)",
+              "rgb(236, 72, 153)",
+              "rgb(59, 130, 246)",
+              "rgb(168, 85, 247)",
+              "rgb(34, 211, 238)",
+            ],
+            borderWidth: 2,
+          },
+        ],
+      }
+    : { labels: [], datasets: [] };
+
+  // Monthly statistics chart
+  const monthlyStatsData = analytics?.monthlyStats
+    ? {
+        labels: analytics.monthlyStats.map((m) => m.month),
+        datasets: [
+          {
+            label: "Exams Attended",
+            data: analytics.monthlyStats.map((m) => m.examsAttended),
+            borderColor: "rgb(99, 102, 241)",
+            backgroundColor: "rgba(99, 102, 241, 0.2)",
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: "rgb(99, 102, 241)",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+          {
+            label: "Flags Received",
+            data: analytics.monthlyStats.map((m) => m.flagsReceived),
+            borderColor: "rgb(239, 68, 68)",
+            backgroundColor: "rgba(239, 68, 68, 0.2)",
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: "rgb(239, 68, 68)",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+        ],
+      }
+    : { labels: [], datasets: [] };
+
+  // Recent exams pie chart
+  const recentExamsData = analytics?.recentExams?.length > 0
+    ? {
+        labels: analytics.recentExams.slice(0, 5).map((exam) => exam.examName || exam.courseName || exam.roomId),
+        datasets: [
+          {
+            data: analytics.recentExams.slice(0, 5).map((exam) => exam.flagsCount || 0),
+            backgroundColor: ["#4f46e5", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"],
+            borderWidth: 1,
+          },
+        ],
+      }
+    : { labels: [], datasets: [] };
+
+  // Exam status distribution
+  const examStatusData = analytics
+    ? {
+        labels: ["Exams with Flags", "Clean Exams"],
+        datasets: [
+          {
+            data: [
+              analytics.flagsPerExam?.length || 0,
+              Math.max(0, (analytics.totalExamsAttended || 0) - (analytics.flagsPerExam?.length || 0)),
+            ],
+            backgroundColor: ["rgba(239, 68, 68, 0.8)", "rgba(34, 197, 94, 0.8)"],
+            borderColor: ["rgb(239, 68, 68)", "rgb(34, 197, 94)"],
+            borderWidth: 2,
+          },
+        ],
+      }
+    : { labels: [], datasets: [] };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="p-6">
-      {/* 🔹 Stats Grid */}
-      <motion.div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4" variants={containerVariants} initial="hidden" animate="visible">
+    <motion.div
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="p-6"
+    >
+      {/* Header with refresh button */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold">My Analytics</h1>
+          <p className="text-sm text-muted-foreground mt-1">Welcome back, {studentName}! 👋</p>
+        </div>
+        {studentId && (
+          <button
+            onClick={() => fetchStudentAnalytics(studentId)}
+            disabled={loading}
+            className="px-4 py-2 bg-primary/20 text-primary rounded-lg hover:bg-primary/30 transition-colors flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        )}
+      </div>
+
+      {/* Stats Grid */}
+      <motion.div
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {stats.map((stat) => (
           <motion.div key={stat.title} variants={itemVariants}>
             <Card className="glass-card hover:shadow-lg transition-all duration-300 animate-glow">
@@ -143,189 +326,81 @@ export default function DashboardHome() {
         ))}
       </motion.div>
 
-      {/* 🔹 Graphs Section */}
+      {/* Charts Section */}
       <div className="grid mt-10 grid-cols-1 lg:grid-cols-2 gap-8">
-       
+        {/* Flags Per Exam Bar Chart */}
+        {flagsPerExamData.labels.length > 0 && (
+          <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
+            <h3 className="text-lg font-semibold text-center mb-3 text-red-600">
+              Flags Received Per Exam
+            </h3>
+            <div className="h-[300px]">
+              <Bar data={flagsPerExamData} options={chartOptions} />
+            </div>
+          </div>
+        )}
 
-        {/* Bar Chart */}
-        <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
-          <h3 className="text-lg font-semibold text-center mb-3 text-green-600">Exams per Teacher</h3>
-          <Bar data={barData} options={barOptions} />
-        </div>
+        {/* Monthly Statistics Line Chart */}
+        {monthlyStatsData.labels.length > 0 && (
+          <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
+            <h3 className="text-lg font-semibold text-center mb-3 text-purple-600">
+              Monthly Statistics
+            </h3>
+            <div className="h-[300px]">
+              <Line data={monthlyStatsData} options={chartOptions} />
+            </div>
+          </div>
+        )}
 
-        {/* Line Chart */}
-        <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
-          <h3 className="text-lg font-semibold text-center mb-3 text-purple-600">Exam Scores Over Time</h3>
-          <Line data={lineData} />
+        {/* Recent Exams Pie Chart */}
+        {recentExamsData.labels.length > 0 && (
+          <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
+            <h3 className="text-lg font-semibold text-center mb-3 text-indigo-600">
+              Flags in Recent Exams
+            </h3>
+            <div className="h-[300px]">
+              <Pie data={recentExamsData} options={chartOptions} />
+            </div>
+          </div>
+        )}
 
-        </div>
-
- {/* Pie Chart */}
-        <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
-          <h3 className="text-lg font-semibold text-center mb-3 text-indigo-600">Exams per Course</h3>
-          <Pie data={pieData} height={100} />
-        </div>
-
-         {/* Doughnut Chart */}
-        <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
-          <h3 className="text-lg font-semibold text-center mb-3 text-orange-600">Exam Type Distribution</h3>
-          <Doughnut data={doughnutData} />
-        </div>
-       
+        {/* Exam Status Distribution */}
+        {examStatusData.labels.length > 0 && (
+          <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
+            <h3 className="text-lg font-semibold text-center mb-3 text-orange-600">
+              Exam Status Distribution
+            </h3>
+            <div className="h-[300px]">
+              <Doughnut data={examStatusData} options={chartOptions} />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* 🔹 Exam Dates List */}
-      {/* <div className="bg-white border border-gray-100 shadow-md rounded-xl p-4 mt-8">
-        <h3 className="text-lg font-semibold text-center text-purple-600 mb-4">Exam History (Date-wise)</h3>
-        <ul className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 text-center">
-          {examStats.examDates.map((date, i) => (
-            <li key={i} className="bg-gradient-to-br from-indigo-50 to-purple-50 p-3 rounded-lg shadow-sm border hover:shadow-md transition">
-              <span className="text-sm font-medium text-gray-700">🗓 {date}</span>
-            </li>
-          ))}
-        </ul>
-      </div> */}
+      {/* Current Exam Status */}
+      {analytics?.isCurrentlyInExam && analytics?.currentExamRoom && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-8"
+        >
+          <Card className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-cyan-600">Currently In Exam</h3>
+                  <p className="text-muted-foreground mt-1">
+                    {analytics.currentExamRoom.examName || analytics.currentExamRoom.courseName || analytics.currentExamRoom.roomId}
+                  </p>
+                </div>
+                <div className="p-3 rounded-lg bg-cyan-500/20">
+                  <FileText className="w-6 h-6 text-cyan-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
-
-
-
-
-// import { motion } from "framer-motion";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-// import { FileText, CheckCircle, AlertTriangle, Award } from "lucide-react";
-// import {
-//   BarChart,
-//   Bar,
-//   XAxis,
-//   YAxis,
-//   CartesianGrid,
-//   Tooltip,
-//   ResponsiveContainer,
-// } from "recharts";
-
-// // Mock student data
-// const studentInfo = {
-//   name: "Anik",
-//   studentId: "C231109",
-// };
-
-// const examMarksData = [
-//   { exam: "Midterm 1", marks: 85 },
-//   { exam: "Midterm 2", marks: 78 },
-//   { exam: "Final", marks: 92 },
-//   { exam: "Quiz 1", marks: 88 },
-//   { exam: "Quiz 2", marks: 95 },
-// ];
-
-// const stats = [
-//   { title: "Exams Attended", value: "5", icon: CheckCircle, color: "bg-primary/20 text-primary" },
-//   { title: "Exams Available", value: "8", icon: FileText, color: "bg-cyan-500/20 text-cyan-400" },
-//   { title: "Activity Alerts", value: "2", icon: AlertTriangle, color: "bg-destructive/20 text-destructive" },
-//   { title: "Average Score", value: "87.6%", icon: Award, color: "bg-green-500/20 text-green-400" },
-// ];
-
-// const containerVariants = {
-//   hidden: { opacity: 0 },
-//   visible: {
-//     opacity: 1,
-//     transition: {
-//       staggerChildren: 0.1,
-//     },
-//   },
-// };
-
-// const itemVariants = {
-//   hidden: { opacity: 0, y: 20 },
-//   visible: { opacity: 1, y: 0 },
-// };
-
-// export default function StudentDashboard2() {
-//   return (
-//     <div className="space-y-6 max-w-full mx-auto">
-//       {/* Student Info Card */}
-//       {/* <motion.div
-//         initial={{ opacity: 0, y: -20 }}
-//         animate={{ opacity: 1, y: 0 }}
-//         transition={{ duration: 0.5 }}
-//       >
-//         <Card className="glass-card border-primary/20 shadow-none">
-//           <CardContent className="p-6">
-//             <div className="flex items-center justify-between">
-//               <div>
-//                 <h2 className="text-2xl font-bold gradient-text">{studentInfo.name}</h2>
-//                 <p className="text-muted-foreground mt-1">ID: {studentInfo.studentId}</p>
-//               </div>
-//               <div className="p-4 rounded-lg bg-primary/20">
-//                 <Award className="w-8 h-8 text-primary" />
-//               </div>
-//             </div>
-//           </CardContent>
-//         </Card>
-//       </motion.div> */}
-
-//       {/* Stats Grid */}
-//       <motion.div
-//         className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
-//         variants={containerVariants}
-//         initial="hidden"
-//         animate="visible"
-//       >
-//         {stats.map((stat) => (
-//           <motion.div key={stat.title} variants={itemVariants}>
-//             <Card className="glass-card hover:shadow-lg transition-all duration-300 animate-glow">
-//               <CardContent className="p-6">
-//                 <div className="flex items-center justify-between">
-//                   <div>
-//                     <p className="text-sm text-muted-foreground">{stat.title}</p>
-//                     <h3 className="text-3xl font-bold mt-2">{stat.value}</h3>
-//                   </div>
-//                   <div className={`p-3 rounded-lg ${stat.color}`}>
-//                     <stat.icon className="w-6 h-6" />
-//                   </div>
-//                 </div>
-//               </CardContent>
-//             </Card>
-//           </motion.div>
-//         ))}
-//       </motion.div>
-
-//       {/* Exam Marks Chart */}
-//       <motion.div
-//         variants={itemVariants}
-//         initial="hidden"
-//         animate="visible"
-//         transition={{ delay: 0.3 }}
-//       >
-//         <Card className="glass-card">
-//           <CardHeader>
-//             <CardTitle className="gradient-text">Exam Performance</CardTitle>
-//           </CardHeader>
-//           <CardContent>
-//             <ResponsiveContainer width="100%" height={400}>
-//               <BarChart data={examMarksData}>
-//                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 20%)" />
-//                 <XAxis dataKey="exam" stroke="hsl(0 0% 60%)" />
-//                 <YAxis stroke="hsl(0 0% 60%)" domain={[0, 100]} />
-//                 <Tooltip
-//                   contentStyle={{
-//                     backgroundColor: "hsl(0 0% 10%)",
-//                     border: "1px solid hsl(0 0% 20%)",
-//                     borderRadius: "8px",
-//                   }}
-//                 />
-//                 <Bar 
-//                   dataKey="marks" 
-//                   fill="hsl(189, 94%, 43%)" 
-//                   radius={[8, 8, 0, 0]}
-//                   label={{ position: 'top', fill: 'hsl(0 0% 98%)' }}
-//                 />
-//               </BarChart>
-//             </ResponsiveContainer>
-//           </CardContent>
-//         </Card>
-//       </motion.div>
-//     </div>
-//   );
-// }

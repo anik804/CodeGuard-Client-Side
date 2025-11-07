@@ -35,9 +35,9 @@ export function MonitoringHeader({
                   <span className="px-2 py-0.5 bg-slate-800 rounded-md text-xs font-medium text-slate-300 border border-slate-700">
                     Room: {roomId}
                   </span>
-                  {examDetails?.courseName && (
+                  {(examDetails?.examName || examDetails?.courseName) && (
                     <span className="px-2 py-0.5 bg-slate-800 rounded-md text-xs font-medium text-slate-300 border border-slate-700">
-                      {examDetails.courseName}
+                      {examDetails.examName || examDetails.courseName}
                     </span>
                   )}
                   {examDetails?.examDuration && (
