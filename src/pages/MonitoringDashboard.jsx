@@ -14,7 +14,6 @@ import { StatsSection } from "../components/monitoring/StatsSection";
 import { MonitoringSidebar } from "../components/monitoring/MonitoringSidebar";
 import { StudentVideoGrid } from "../components/monitoring/StudentVideoGrid";
 import { Button } from "../components/ui/button";
-import { Users } from "lucide-react";
 
 export default function MonitoringDashboardPage() {
   const { roomId } = useParams();
@@ -110,14 +109,7 @@ export default function MonitoringDashboardPage() {
       toast.error(`🚨 Student ${log.studentId} visited illegal site!`, {
         duration: 5000,
       });
-      // Remove red border after 30 seconds
-      setTimeout(() => {
-        setFlaggedStudents((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(log.studentId);
-          return newSet;
-        });
-      }, 30000);
+      // Note: Flag will remain until examiner dismisses it manually
     });
 
     return () => {
@@ -244,6 +236,16 @@ export default function MonitoringDashboardPage() {
     cleanupWebRTC();
   };
 
+  // Dismiss flag (false alarm)
+  const handleDismissFlag = (studentId) => {
+    setFlaggedStudents((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(studentId);
+      return newSet;
+    });
+    toast.success(`Flag dismissed for student ${studentId}`);
+  };
+
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
       <MonitoringHeader
@@ -281,27 +283,15 @@ export default function MonitoringDashboardPage() {
           flaggedStudents={flaggedStudents}
         />
 
-        <Button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={`fixed right-4 z-30 shadow-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-2 h-9 px-3 transition-all duration-300 ${
-            sidebarOpen ? 'top-[calc(100vh-4rem)]' : 'top-20'
-          }`}
-        >
-          <Users className="w-4 h-4 text-cyan-400" />
-          <span className="text-xs font-medium">{sidebarOpen ? 'Close Panel' : 'View Panel'}</span>
-          {flaggedStudents.size > 0 && (
-            <span className="px-1.5 py-0.5 bg-red-600 text-white text-xs font-semibold rounded">
-              {flaggedStudents.size}
-            </span>
-          )}
-        </Button>
-
         <StudentVideoGrid
           peers={peers}
           students={students}
           flaggedStudents={flaggedStudents}
           sidebarOpen={sidebarOpen}
           activityLogOpen={false}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onDismissFlag={handleDismissFlag}
+          roomId={roomId}
         />
       </main>
     </div>
