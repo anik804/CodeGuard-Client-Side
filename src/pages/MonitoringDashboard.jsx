@@ -65,6 +65,10 @@ export default function MonitoringDashboardPage() {
       .then((data) => {
         if (data.success && data.room) {
           setExamDetails(data.room);
+          // Update document title with exam name
+          if (data.room.examName || data.room.courseName) {
+            document.title = `Monitoring: ${data.room.examName || data.room.courseName}`;
+          }
         }
       })
       .catch((err) => console.error("Failed to fetch exam details:", err));
@@ -205,7 +209,7 @@ export default function MonitoringDashboardPage() {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            courseName: examDetails.courseName,
+            courseName: examDetails.examName || examDetails.courseName,
             examDuration: examDetails.examDuration
           })
         });

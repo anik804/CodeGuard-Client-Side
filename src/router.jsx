@@ -64,7 +64,7 @@ import Login from "./components/Login";
 import AuthLayout from "./layouts/AuthLayout";
 import { DashboardLayout } from "./layouts/DashBoardLayout";
 import { StudentDashboardLayout } from "./layouts/StudentDashboardLayout";
-// import CreateExamPage from "./pages/CreateExam";
+import CreateExamPage from "./pages/CreateExam";
 import Dashboard from "./pages/DashBoard";
 import ExamHistoryPage from "./pages/ExamHistory";
 import Home from "./pages/Home";
@@ -118,7 +118,7 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Dashboard></Dashboard> }, // Dashboard Overview
-      { path: "create-exam", element: <ExaminerDashboardContent></ExaminerDashboardContent> },
+      { path: "create-exam", element: <CreateExamPage /> },
       { path: "schedule-exam", element: <ScheduleExamPage /> },
       { path: "exam-history", element: <ExamHistoryPage /> },
       { path: "profile" , element: <Profile></Profile>}

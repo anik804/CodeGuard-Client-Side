@@ -18,6 +18,12 @@ export default function ExamInstructionPage() {
       return;
     }
 
+    // Get student name from sessionStorage first (faster)
+    const storedName = sessionStorage.getItem('studentName');
+    if (storedName) {
+      setUsername(storedName);
+    }
+
     // Check if roomId exists in session (user joined the room)
     const storedRoomId = sessionStorage.getItem('roomId');
     if (!storedRoomId || storedRoomId !== roomId) {
@@ -43,12 +49,13 @@ export default function ExamInstructionPage() {
 
     fetchExamDetails();
 
-    // Fetch student name
-    if (studentId) {
+    // Fetch student name from API if not in sessionStorage (fallback)
+    if (studentId && !storedName) {
       axios.get(`http://localhost:3000/api/students/${studentId}`)
         .then(res => {
           if (res.data?.name) {
             setUsername(res.data.name);
+            sessionStorage.setItem('studentName', res.data.name);
           }
         })
         .catch(err => console.error('Failed to fetch student info:', err));
@@ -85,7 +92,7 @@ export default function ExamInstructionPage() {
 
   return (
     <ExamInstructions
-      courseName={examDetails.courseName || examDetails.roomId}
+      courseName={examDetails.examName || examDetails.courseName || examDetails.roomId}
       durationMinutes={examDetails.examDuration || 90}
       roomId={roomId}
       username={username}

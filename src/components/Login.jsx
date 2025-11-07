@@ -97,10 +97,12 @@ const AuthPage = () => {
         if (role === "student") {
           sessionStorage.setItem("role", "student");
           sessionStorage.setItem("studentId", data.studentId);
+          sessionStorage.setItem("studentName", result.user?.name || result.user?.studentId || "Student");
           navigate("/student-dashboard", { replace: true });
         } else if (role === "examiner") {
           sessionStorage.setItem("role", "examiner");
           sessionStorage.setItem("username", data.username);
+          sessionStorage.setItem("examinerName", result.user?.name || result.user?.username || "Examiner");
           navigate("/examiner-dashboard", { replace: true });
         }
       } else {

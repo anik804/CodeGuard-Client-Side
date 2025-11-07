@@ -12,6 +12,17 @@ export function StudentDashboardContent({ onStudentNameChange }) {
   const [loading, setLoading] = useState(false);
   const [username, setUsername] = useState('Student');
 
+  useEffect(() => {
+    // Get student name from sessionStorage
+    const storedName = sessionStorage.getItem('studentName');
+    const storedId = sessionStorage.getItem('studentId');
+    if (storedName) {
+      setUsername(storedName);
+    } else if (storedId) {
+      setUsername(storedId);
+    }
+  }, []);
+
   const fakeExams = [
     { id: 1, course: 'Data Structures', examiner: 'Dr. Rahman', date: '2025-10-01', score: 85 },
     { id: 2, course: 'Algorithms', examiner: 'Prof. Karim', date: '2025-09-15', score: 90 },
