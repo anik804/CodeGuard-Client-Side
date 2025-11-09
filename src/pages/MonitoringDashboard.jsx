@@ -117,7 +117,7 @@ export default function MonitoringDashboardPage() {
       .catch((err) => console.error("Failed to fetch exam details:", err));
 
     // Fetch existing question
-    fetch(`http://localhost:3000/api/rooms/${roomId}/question`)
+    fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.hasQuestion) {
@@ -174,7 +174,7 @@ export default function MonitoringDashboardPage() {
   // Fetch submissions
   const fetchSubmissions = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/submissions/${roomId}/submissions`);
+      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/${roomId}/submissions`);
       const data = await response.json();
       if (data.success) {
         setSubmissions(data.submissions || []);
@@ -267,7 +267,7 @@ export default function MonitoringDashboardPage() {
       setExamEnded(false);
       timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
       
-      const response = await fetch(`http://localhost:3000/api/rooms/${roomId}/question`);
+      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question`);
       const data = await response.json();
       
       if (data.success && data.hasQuestion) {
@@ -325,7 +325,7 @@ export default function MonitoringDashboardPage() {
   // Export attendance
   const handleExportAttendance = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/rooms/${roomId}/attendance/export`);
+      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/attendance/export`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -356,7 +356,7 @@ export default function MonitoringDashboardPage() {
   const showBackButton = !examStarted || examEnded;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header with Back Button */}
       {showBackButton && (
         <motion.div
@@ -685,7 +685,7 @@ export default function MonitoringDashboardPage() {
                                 <Button
                                   onClick={async () => {
                                     try {
-                                      const response = await fetch(`http://localhost:3000/api/submissions/submission/${submission._id}/download`);
+                                      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/submission/${submission._id}/download`);
                                       const data = await response.json();
                                       if (data.success) {
                                         window.open(data.url, '_blank');
@@ -703,7 +703,7 @@ export default function MonitoringDashboardPage() {
                                 <Button
                                   onClick={async () => {
                                     try {
-                                      const response = await fetch(`http://localhost:3000/api/submissions/submission/${submission._id}/download`);
+                                      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/submission/${submission._id}/download`);
                                       const data = await response.json();
                                       if (data.success) {
                                         const a = document.createElement('a');

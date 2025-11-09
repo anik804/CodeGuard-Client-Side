@@ -670,7 +670,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
 
                         try {
                           const response = await axios.post(
-                            `http://localhost:3000/api/submissions/${roomId}/submit`,
+                            `https://codeguard-server-side-walb.onrender.com/api/submissions/${roomId}/submit`,
                             formData,
                             {
                               headers: {

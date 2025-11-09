@@ -104,7 +104,7 @@ export default function Dashboard() {
       }
 
       const response = await fetch(
-        `http://localhost:3000/api/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
+        `https://codeguard-server-side-walb.onrender.com/api/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
       );
       
       if (!response.ok) {
@@ -136,8 +136,8 @@ export default function Dashboard() {
         if (!username) return;
 
         const [studentsPerExamRes, roomsCreatedRes] = await Promise.all([
-          fetch(`http://localhost:3000/api/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
-          fetch(`http://localhost:3000/api/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
+          fetch(`https://codeguard-server-side-walb.onrender.com/api/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
+          fetch(`https://codeguard-server-side-walb.onrender.com/api/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
         ]);
 
         const studentsPerExamData = await studentsPerExamRes.json();
@@ -315,8 +315,8 @@ export default function Dashboard() {
                 try {
                   setLoadingExaminerAnalytics(true);
                   const [studentsPerExamRes, roomsCreatedRes] = await Promise.all([
-                    fetch(`http://localhost:3000/api/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
-                    fetch(`http://localhost:3000/api/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
+                    fetch(`https://codeguard-server-side-walb.onrender.com/api/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
+                    fetch(`https://codeguard-server-side-walb.onrender.com/api/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
                   ]);
 
                   const studentsPerExamData = await studentsPerExamRes.json();
@@ -374,7 +374,7 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-xs text-gray-600 mt-1">Your exam rooms</p>
               </div>
-              <div className="p-3 rounded-lg bg-gradient-to-r from-pink-100 via-blue-100 to-green-100">
+              <div className="p-3 rounded-lg bg-linear-to-r from-pink-100 via-blue-100 to-green-100">
                 <FileText className="w-6 h-6" />
               </div>
             </CardContent>
@@ -402,7 +402,7 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-xs text-gray-600 mt-1">Across all exams</p>
               </div>
-              <div className="p-3 rounded-lg bg-gradient-to-r from-yellow-100 via-purple-100 to-cyan-100">
+              <div className="p-3 rounded-lg bg-linear-to-r from-yellow-100 via-purple-100 to-cyan-100">
                 <Users className="w-6 h-6" />
               </div>
             </CardContent>
@@ -435,7 +435,7 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-xs text-gray-600 mt-1">Per exam average</p>
               </div>
-              <div className="p-3 rounded-lg bg-gradient-to-r from-red-100 via-orange-100 to-pink-100">
+              <div className="p-3 rounded-lg bg-linear-to-r from-red-100 via-orange-100 to-pink-100">
                 <TrendingUp className="w-6 h-6" />
               </div>
             </CardContent>
@@ -463,7 +463,7 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-xs text-gray-600 mt-1">Exams conducted</p>
               </div>
-              <div className="p-3 rounded-lg bg-gradient-to-r from-green-100 via-teal-100 to-lime-100">
+              <div className="p-3 rounded-lg bg-linear-to-r from-green-100 via-teal-100 to-lime-100">
                 <FileText className="w-6 h-6" />
               </div>
             </CardContent>
@@ -665,9 +665,9 @@ export default function Dashboard() {
                         )}
                       </div>
                       {isScheduled(room) ? (
-                        <Calendar className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+                        <Calendar className="w-4 h-4 text-yellow-600 shrink-0" />
                       ) : (
-                        <FileText className="w-4 h-4 text-green-600 flex-shrink-0" />
+                        <FileText className="w-4 h-4 text-green-600 shrink-0" />
                       )}
                     </div>
                     
