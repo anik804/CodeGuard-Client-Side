@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
-import { Users, FileText, AlertTriangle, TrendingUp } from "lucide-react";
+import { Users, FileText, AlertTriangle, TrendingUp, Calendar, Clock, ArrowRight, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   LineChart,
   Line,
@@ -92,8 +94,148 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const [examinerRooms, setExaminerRooms] = useState([]);
+  const [loadingRooms, setLoadingRooms] = useState(true);
+
+  useEffect(() => {
+    const fetchExaminerRooms = async () => {
+      try {
+        const username = sessionStorage.getItem("username");
+        if (!username) {
+          console.log("⚠️ No username found in sessionStorage");
+          return;
+        }
+
+        console.log("🔍 Fetching rooms for examiner:", username);
+        const response = await fetch(
+          `http://localhost:3000/api/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
+        );
+        
+        if (!response.ok) {
+          console.error("❌ Failed to fetch rooms:", response.status, response.statusText);
+          return;
+        }
+        
+        const data = await response.json();
+        console.log("📦 Received rooms data:", data);
+        
+        if (data.success) {
+          console.log(`✅ Found ${data.rooms?.length || 0} rooms`);
+          setExaminerRooms(data.rooms || []);
+        } else {
+          console.error("❌ API returned success: false", data.message);
+        }
+      } catch (error) {
+        console.error("❌ Failed to fetch examiner rooms:", error);
+      } finally {
+        setLoadingRooms(false);
+      }
+    };
+
+    fetchExaminerRooms();
+  }, []);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "Not scheduled";
+    const date = new Date(dateString);
+    return date.toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  const isScheduled = (room) => {
+    if (!room.startTime) return false;
+    const startTime = new Date(room.startTime);
+    return startTime > new Date();
+  };
+
   return (
     <div className="space-y-6">
+      {/* Created/Scheduled Exams Section */}
+      {examinerRooms.length > 0 && (
+        <motion.div
+          variants={itemVariants}
+          initial="hidden"
+          animate="visible"
+          className="mb-6"
+        >
+          <div className="glass-card p-6 rounded-xl shadow-lg">
+            <h3 className="text-lg font-semibold mb-4 gradient-text flex items-center gap-2">
+              <FileText className="w-5 h-5" />
+              Your Created Exams ({examinerRooms.length})
+            </h3>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {examinerRooms.map((room) => (
+                <motion.div
+                  key={room.roomId}
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => navigate(`/monitoring/${room.roomId}`)}
+                  className="glass-card p-4 rounded-lg border-2 border-gray-200 hover:border-blue-300 hover:shadow-lg cursor-pointer transition-all group bg-white/80"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-800 text-sm mb-1 group-hover:text-blue-600 transition-colors">
+                        {room.examName || room.courseName || room.roomId}
+                      </h4>
+                      <p className="text-xs text-gray-600 mb-2">Room: {room.roomId}</p>
+                      {room.examSubject && (
+                        <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded mb-2 border border-blue-200">
+                          {room.examSubject}
+                        </span>
+                      )}
+                    </div>
+                    {isScheduled(room) ? (
+                      <Calendar className="w-4 h-4 text-yellow-600 flex-shrink-0" />
+                    ) : (
+                      <FileText className="w-4 h-4 text-green-600 flex-shrink-0" />
+                    )}
+                  </div>
+                  
+                  <div className="space-y-1.5 mb-3">
+                    {room.examDuration && (
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Clock className="w-3 h-3" />
+                        <span>{room.examDuration} minutes</span>
+                      </div>
+                    )}
+                    {room.startTime && (
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Calendar className="w-3 h-3" />
+                        <span>{formatDate(room.startTime)}</span>
+                      </div>
+                    )}
+                    {room.maxStudents && (
+                      <div className="flex items-center gap-2 text-xs text-gray-600">
+                        <Users className="w-3 h-3" />
+                        <span>Max: {room.maxStudents} students</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-200">
+                    <span className={`text-xs px-2 py-1 rounded ${
+                      isScheduled(room) 
+                        ? "bg-yellow-100 text-yellow-700 border border-yellow-300" 
+                        : "bg-green-100 text-green-700 border border-green-300"
+                    }`}>
+                      {isScheduled(room) ? "Scheduled" : "Created"}
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-gray-500 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Stats Grid */}
       <motion.div
         className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"

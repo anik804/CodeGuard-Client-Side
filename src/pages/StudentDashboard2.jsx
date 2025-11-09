@@ -6,6 +6,8 @@ import {
   AlertTriangle,
   Award,
   RefreshCw,
+  Users,
+  GraduationCap,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -43,6 +45,8 @@ export default function StudentDashboard2() {
   const [error, setError] = useState(null);
   const [studentId, setStudentId] = useState(null);
   const [studentName, setStudentName] = useState("Student");
+  const [examHistory, setExamHistory] = useState(null);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
   useEffect(() => {
     const storedName = sessionStorage.getItem("studentName");
@@ -56,11 +60,30 @@ export default function StudentDashboard2() {
     if (storedStudentId) {
       setStudentId(storedStudentId);
       fetchStudentAnalytics(storedStudentId);
+      fetchExamHistory(storedStudentId);
     } else {
       setError("Student ID not found. Please log in again.");
       setLoading(false);
+      setLoadingHistory(false);
     }
   }, []);
+
+  const fetchExamHistory = async (id) => {
+    try {
+      setLoadingHistory(true);
+      const response = await fetch(
+        `http://localhost:3000/api/analytics/student/exam-history?studentId=${encodeURIComponent(id)}`
+      );
+      const data = await response.json();
+      if (data.success) {
+        setExamHistory(data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching exam history:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
 
   const fetchStudentAnalytics = async (id) => {
     try {
@@ -339,7 +362,7 @@ export default function StudentDashboard2() {
       className="h-40"
     >
       <Card
-        className={`h-full rounded-2xl shadow-md border-none overflow-hidden bg-gradient-to-br ${stat.color} flex flex-col justify-between p-6`}
+        className={`h-full rounded-2xl shadow-md border-none overflow-hidden bg-linear-to-br ${stat.color} flex flex-col justify-between p-6`}
       >
         <div className="flex justify-between items-center">
           <div>
@@ -406,6 +429,130 @@ export default function StudentDashboard2() {
         )}
       </div>
 
+      {/* Exam History Section */}
+      {examHistory && !loadingHistory && (
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="mt-10 space-y-6"
+        >
+          {/* Summary Cards */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card className="glass-card">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Total Exams Taken</p>
+                    <h3 className="text-3xl font-bold mt-2">{examHistory.totalExams}</h3>
+                  </div>
+                  <FileText className="w-12 h-12 text-blue-500" />
+                </div>
+              </div>
+            </Card>
+            <Card className="glass-card">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Different Examiners</p>
+                    <h3 className="text-3xl font-bold mt-2">{examHistory.totalExaminers}</h3>
+                  </div>
+                  <Users className="w-12 h-12 text-green-500" />
+                </div>
+              </div>
+            </Card>
+            <Card className="glass-card">
+              <div className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-gray-600">Avg Exams/Examiner</p>
+                    <h3 className="text-3xl font-bold mt-2">
+                      {examHistory.totalExaminers > 0
+                        ? Math.round(examHistory.totalExams / examHistory.totalExaminers)
+                        : 0}
+                    </h3>
+                  </div>
+                  <GraduationCap className="w-12 h-12 text-purple-500" />
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Exams by Examiner Chart */}
+          {examHistory.byExaminer.length > 0 && (
+            <Card className="glass-card shadow-md">
+              <div className="p-4 border-b border-gray-100">
+                <h3 className="text-lg font-semibold text-indigo-600">
+                  Exams Taken Under Different Examiners
+                </h3>
+              </div>
+              <div className="p-4">
+                <div className="h-[300px]">
+                  <Bar
+                    data={{
+                      labels: examHistory.byExaminer.map(
+                        (examiner) => examiner.examinerName || examiner.examinerUsername || "Unknown"
+                      ),
+                      datasets: [
+                        {
+                          label: "Exams Taken",
+                          data: examHistory.byExaminer.map((examiner) => examiner.examCount),
+                          backgroundColor: "rgba(99, 102, 241, 0.8)",
+                          borderColor: "rgb(99, 102, 241)",
+                          borderWidth: 2,
+                          borderRadius: 8
+                        }
+                      ]
+                    }}
+                    options={chartOptions}
+                  />
+                </div>
+              </div>
+            </Card>
+          )}
+
+          {/* Recent Exams List */}
+          {examHistory.examHistory.length > 0 && (
+            <Card className="glass-card shadow-md">
+              <div className="p-4 border-b border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-800">Recent Exam History</h3>
+              </div>
+              <div className="p-4">
+                <div className="space-y-3">
+                  {examHistory.examHistory.slice(0, 10).map((exam, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-800">{exam.examName}</h4>
+                        <p className="text-sm text-gray-600">
+                          Examiner: {exam.examinerName || exam.examinerUsername || "Unknown"}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {exam.examDate
+                            ? new Date(exam.examDate).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric"
+                              })
+                            : "Date not available"}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-700">
+                          {exam.activityCount} activities
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          )}
+        </motion.div>
+      )}
+
       {/* Current Exam */}
       {analytics?.isCurrentlyInExam && analytics?.currentExamRoom && (
         <motion.div
@@ -413,7 +560,7 @@ export default function StudentDashboard2() {
           animate={{ opacity: 1, y: 0 }}
           className="mt-8"
         >
-          <Card className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30">
+          <Card className="bg-linear-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30">
             <div className="p-6 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-cyan-600">

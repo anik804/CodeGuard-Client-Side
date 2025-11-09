@@ -1,24 +1,24 @@
 export function StatCard({ icon, title, value, highlight, subtitle }) {
   return (
     <div
-      className={`bg-slate-800/50 backdrop-blur-sm rounded-xl p-5 flex justify-between items-center shadow-xl hover:shadow-2xl transition-all border ${
-        highlight ? "border-red-500/30 bg-red-500/10" : "border-slate-700/50"
+      className={`glass-card rounded-xl p-5 flex justify-between items-center shadow-lg hover:shadow-xl transition-all border-2 ${
+        highlight ? "border-red-300 bg-red-50/50" : "border-gray-200"
       }`}
     >
       <div className="flex-1">
-        <p className="text-xs md:text-sm text-slate-400 font-medium mb-1">{title}</p>
+        <p className="text-xs md:text-sm text-gray-600 font-medium mb-1">{title}</p>
         <p
           className={`text-2xl md:text-3xl font-bold mb-1 ${
-            highlight ? "text-red-400" : "text-slate-200"
+            highlight ? "text-red-600" : "text-gray-800"
           }`}
         >
           {value}
         </p>
         {subtitle && (
-          <p className="text-xs text-slate-400">{subtitle}</p>
+          <p className="text-xs text-gray-500">{subtitle}</p>
         )}
       </div>
-      <div className={`p-3 rounded-full ${highlight ? "bg-red-500/20 border border-red-400/40" : "bg-slate-700/50 border border-slate-600/50"}`}>
+      <div className={`p-3 rounded-full ${highlight ? "bg-red-100 border-2 border-red-300" : "bg-blue-100 border-2 border-blue-200"}`}>
         {icon}
       </div>
     </div>

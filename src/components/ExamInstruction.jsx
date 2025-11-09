@@ -1,22 +1,31 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Eye, FileText, MonitorPlay } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { MonitorPlay, Download, FileText, Eye, ExternalLink, LogOut, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
 import io from "socket.io-client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export function ExamInstructions({ courseName, durationMinutes, roomId, username }) {
+  const navigate = useNavigate();
   const [isSharing, setIsSharing] = useState(false);
   const [timeLeft, setTimeLeft] = useState(durationMinutes * 60);
   const [examStarted, setExamStarted] = useState(false);
   const [validRoom, setValidRoom] = useState(false);
   const [questionUrl, setQuestionUrl] = useState(null);
   const [examStartedByExaminer, setExamStartedByExaminer] = useState(false);
+  const [showLeaveRequest, setShowLeaveRequest] = useState(false);
+  const [leaveReason, setLeaveReason] = useState("");
+  const [submissionFile, setSubmissionFile] = useState(null);
+  const [uploadingSubmission, setUploadingSubmission] = useState(false);
   const userVideoRef = useRef(null);
   const socketRef = useRef(null);
   const peerRef = useRef(null);
   const streamRef = useRef(null);
+  const submissionInputRef = useRef(null);
 
   const formatTime = (seconds) => {
     const h = Math.floor(seconds / 3600).toString().padStart(2, "0");
@@ -58,11 +67,37 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       setQuestionUrl(roomIdForQuestion || roomId);
       setExamStartedByExaminer(true);
       toast.success("Exam started! Questions are now available.");
+      
+      // ✅ Notify extension that exam has actually started (start monitoring now)
+      if (typeof chrome !== 'undefined' && chrome.runtime) {
+        chrome.runtime.sendMessage({
+          type: "EXAM_STARTED"
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.warn("Extension not available:", chrome.runtime.lastError.message);
+          } else {
+            console.log("✅ Extension notified: Exam started - monitoring active");
+          }
+        });
+      }
     });
 
     socketRef.current.on("exam-ended", (data) => {
       setExamStartedByExaminer(false);
       toast.info(data?.message || "Exam has ended.");
+      
+      // ✅ Notify extension that exam has ended
+      if (typeof chrome !== 'undefined' && chrome.runtime) {
+        chrome.runtime.sendMessage({
+          type: "END_EXAM"
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.warn("Extension not available:", chrome.runtime.lastError.message);
+          } else {
+            console.log("✅ Extension notified: Exam ended");
+          }
+        });
+      }
       
       // Stop screen sharing and disconnect
       if (streamRef.current) {
@@ -77,8 +112,88 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       setExamStarted(false);
     });
 
+    // Handle leave request responses
+    socketRef.current.on("leave-request-approved", (data) => {
+      toast.success(data.message || "Your leave request has been approved!");
+      
+      // ✅ Stop monitoring when student leaves
+      if (typeof chrome !== 'undefined' && chrome.runtime) {
+        chrome.runtime.sendMessage({
+          type: "STOP_MONITORING"
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.warn("Extension not available:", chrome.runtime.lastError.message);
+          } else {
+            console.log("✅ Extension notified: Monitoring stopped");
+          }
+        });
+      }
+      
+      // Student can now leave - redirect after a moment
+      setTimeout(() => {
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
+        if (peerRef.current) {
+          peerRef.current.destroy();
+          peerRef.current = null;
+        }
+        socketRef.current?.disconnect();
+        navigate('/student-dashboard');
+      }, 2000);
+    });
+
+    socketRef.current.on("leave-request-denied", (data) => {
+      toast.error(data.message || "Your leave request has been denied.");
+    });
+
+    // Handle kick
+    socketRef.current.on("student-kicked", (data) => {
+      toast.error(data.message || "You have been removed from the exam.");
+      
+      // ✅ Stop monitoring when student is kicked
+      if (typeof chrome !== 'undefined' && chrome.runtime) {
+        chrome.runtime.sendMessage({
+          type: "STOP_MONITORING"
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.warn("Extension not available:", chrome.runtime.lastError.message);
+          } else {
+            console.log("✅ Extension notified: Monitoring stopped");
+          }
+        });
+      }
+      
+      setTimeout(() => {
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
+        if (peerRef.current) {
+          peerRef.current.destroy();
+          peerRef.current = null;
+        }
+        socketRef.current?.disconnect();
+        navigate('/student-dashboard');
+      }, 2000);
+    });
+
     // Handle force disconnect
     socketRef.current.on("force-disconnect", () => {
+      // ✅ Stop monitoring when force disconnected
+      if (typeof chrome !== 'undefined' && chrome.runtime) {
+        chrome.runtime.sendMessage({
+          type: "STOP_MONITORING"
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            console.warn("Extension not available:", chrome.runtime.lastError.message);
+          } else {
+            console.log("✅ Extension notified: Monitoring stopped");
+          }
+        });
+      }
+      
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
@@ -433,16 +548,163 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
               </Button>
             )}
             {examStarted && (
-              <Button
-                variant="outline"
-                disabled
-                className="px-8 py-6 text-base md:text-lg border-2 border-green-500 text-green-700 bg-green-50 font-semibold"
-              >
-                <MonitorPlay className="mr-2 h-5 w-5" />
-                Screen Sharing Active
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  disabled
+                  className="px-8 py-6 text-base md:text-lg border-2 border-green-500 text-green-700 bg-green-50 font-semibold"
+                >
+                  <MonitorPlay className="mr-2 h-5 w-5" />
+                  Screen Sharing Active
+                </Button>
+                <Button
+                  onClick={() => setShowLeaveRequest(true)}
+                  variant="outline"
+                  className="px-6 py-6 text-base md:text-lg border-2 border-orange-500 text-orange-700 bg-orange-50 font-semibold hover:bg-orange-100"
+                >
+                  <LogOut className="mr-2 h-5 w-5" />
+                  Request to Leave
+                </Button>
+              </>
             )}
           </div>
+
+          {/* Leave Request Dialog */}
+          {showLeaveRequest && (
+            <Card className="mt-6 bg-yellow-50 border-2 border-yellow-300">
+              <CardHeader>
+                <CardTitle className="text-yellow-800">Request to Leave Exam</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason (optional)
+                  </label>
+                  <Input
+                    value={leaveReason}
+                    onChange={(e) => setLeaveReason(e.target.value)}
+                    placeholder="Enter reason for leaving..."
+                    className="bg-white"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      const studentId = sessionStorage.getItem('studentId') || 'unknown';
+                      socketRef.current?.emit("student-request-leave", {
+                        roomId,
+                        studentId,
+                        studentName: username,
+                        reason: leaveReason || "No reason provided"
+                      });
+                      toast.info("Leave request sent to examiner");
+                      setShowLeaveRequest(false);
+                      setLeaveReason("");
+                    }}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                  >
+                    Send Request
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setShowLeaveRequest(false);
+                      setLeaveReason("");
+                    }}
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* File Upload Section (when screen sharing is active) */}
+          {isSharing && (
+            <Card className="mt-6 bg-green-50 border-2 border-green-300">
+              <CardHeader>
+                <CardTitle className="text-green-800 flex items-center gap-2">
+                  <Upload className="w-5 h-5" />
+                  Upload Your Work
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-gray-700">
+                  Upload your completed work as a PDF or Word document. The examiner will review it.
+                </p>
+                <Input
+                  ref={submissionInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const allowedTypes = [
+                        'application/pdf',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                      ];
+                      if (allowedTypes.includes(file.type)) {
+                        setSubmissionFile(file);
+                      } else {
+                        toast.error("Please select a PDF or Word document");
+                      }
+                    }
+                  }}
+                  className="bg-white"
+                />
+                {submissionFile && (
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-green-600" />
+                      <span className="text-sm font-medium">{submissionFile.name}</span>
+                    </div>
+                    <Button
+                      onClick={async () => {
+                        if (!submissionFile) return;
+                        setUploadingSubmission(true);
+                        const formData = new FormData();
+                        formData.append('submission', submissionFile);
+                        formData.append('studentId', sessionStorage.getItem('studentId') || 'unknown');
+                        formData.append('studentName', username || 'Student');
+
+                        try {
+                          const response = await axios.post(
+                            `http://localhost:3000/api/submissions/${roomId}/submit`,
+                            formData,
+                            {
+                              headers: {
+                                'Content-Type': 'multipart/form-data',
+                              },
+                            }
+                          );
+
+                          if (response.data.success) {
+                            toast.success("Work uploaded successfully!");
+                            setSubmissionFile(null);
+                            if (submissionInputRef.current) {
+                              submissionInputRef.current.value = '';
+                            }
+                          } else {
+                            toast.error(response.data.message || "Failed to upload work");
+                          }
+                        } catch (error) {
+                          console.error("Upload error:", error);
+                          toast.error(error.response?.data?.message || "Failed to upload work");
+                        } finally {
+                          setUploadingSubmission(false);
+                        }
+                      }}
+                      disabled={uploadingSubmission}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      {uploadingSubmission ? "Uploading..." : "Upload"}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {isSharing && (
