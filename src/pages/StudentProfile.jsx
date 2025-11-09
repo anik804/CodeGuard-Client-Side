@@ -1,26 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import axios from "axios";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import axios from "axios";
+import { motion } from "framer-motion";
 import {
-  User,
-  Mail,
-  Phone,
-  Calendar,
-  BookOpen,
-  Save,
-  Loader2,
+    BookOpen,
+    Calendar,
+    Loader2,
+    Mail,
+    Phone,
+    Save,
+    User,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function StudentProfile() {
   const [student, setStudent] = useState(null);
@@ -39,7 +39,7 @@ export default function StudentProfile() {
   const fetchStudentInfo = async (studentId) => {
     try {
       const res = await axios.get(
-        `http://localhost:3000/api/students/${studentId}`
+        `https://codeguard-server-side-walb.onrender.com/api/students/${studentId}`
       );
       setStudent(res.data);
     } catch (err) {

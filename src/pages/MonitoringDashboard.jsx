@@ -1,19 +1,17 @@
+import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import io from "socket.io-client";
-import axios from "axios";
 
 import { toast } from "sonner";
 import { useWebRTC } from "../hooks/useWebRTC";
-import { formatTime } from "../utils/timeFormatter";
 
 // Components
-import { MonitoringHeader } from "../components/monitoring/MonitoringHeader";
 import { ExamInfoSection } from "../components/monitoring/ExamInfoSection";
-import { StatsSection } from "../components/monitoring/StatsSection";
+import { MonitoringHeader } from "../components/monitoring/MonitoringHeader";
 import { MonitoringSidebar } from "../components/monitoring/MonitoringSidebar";
+import { StatsSection } from "../components/monitoring/StatsSection";
 import { StudentVideoGrid } from "../components/monitoring/StudentVideoGrid";
-import { Button } from "../components/ui/button";
 
 export default function MonitoringDashboardPage() {
   const { roomId } = useParams();
@@ -54,12 +52,12 @@ export default function MonitoringDashboardPage() {
   useEffect(() => {
     if (!roomId || typeof window === "undefined") return;
 
-    socketRef.current = io("http://localhost:3000");
+    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
 
     // Note: Logs are now fetched by ActivityLog component with pagination
 
     // Fetch exam details
-    fetch(`http://localhost:3000/api/rooms/${roomId}/exam-details`)
+    fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/exam-details`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.room) {
@@ -73,7 +71,7 @@ export default function MonitoringDashboardPage() {
       .catch((err) => console.error("Failed to fetch exam details:", err));
 
     // Fetch existing question if any
-    fetch(`http://localhost:3000/api/rooms/${roomId}/question`)
+    fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.hasQuestion) {
@@ -153,10 +151,10 @@ export default function MonitoringDashboardPage() {
     formData.append('question', questionFile);
 
     try {
-      console.log(`📤 Uploading to: http://localhost:3000/api/rooms/${roomId}/question`);
+      console.log(`📤 Uploading to: https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question`);
       
       const response = await axios.post(
-        `http://localhost:3000/api/rooms/${roomId}/question`,
+        `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question`,
         formData,
         {
           headers: {
@@ -197,7 +195,7 @@ export default function MonitoringDashboardPage() {
     try {
       // Update exam started time in database
       if (examDetails) {
-        await fetch(`http://localhost:3000/api/rooms/${roomId}/exam-details`, {
+        await fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/exam-details`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -213,7 +211,7 @@ export default function MonitoringDashboardPage() {
       timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
       
       // Check if question exists
-      const response = await fetch(`http://localhost:3000/api/rooms/${roomId}/question`);
+      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question`);
       const data = await response.json();
       
       if (data.success && data.hasQuestion) {

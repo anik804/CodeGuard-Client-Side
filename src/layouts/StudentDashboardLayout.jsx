@@ -1,10 +1,10 @@
 import { SidebarProvider, useSidebar } from "@/components/ui/sidebar";
-import { StudentDashboardSidebar } from "./StudentDashboardSidebar";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Outlet } from "react-router-dom";
 import axios from "axios";
+import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
+import { StudentDashboardSidebar } from "./StudentDashboardSidebar";
 
 function LayoutContent({ children }) {
   const { open } = useSidebar();
@@ -22,7 +22,7 @@ function LayoutContent({ children }) {
 
   const fetchStudentInfo = async (studentId) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/students/${studentId}`);
+      const res = await axios.get(`https://codeguard-server-side-walb.onrender.com/api/students/${studentId}`);
       setStudent(res.data);
     } catch (err) {
       console.error("❌ Failed to fetch student info:", err);

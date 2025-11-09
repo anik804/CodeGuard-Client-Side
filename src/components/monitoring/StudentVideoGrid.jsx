@@ -1,5 +1,5 @@
-import { Video, Users } from "lucide-react";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { Users, Video } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import StudentVideo from "../StudentVideo";
 import { Button } from "../ui/button";
 import { Pagination } from "./Pagination";
@@ -52,7 +52,7 @@ export function StudentVideoGrid({
     const fetchPaginatedStudents = async (silent = false) => {
       try {
         const response = await fetch(
-          `http://localhost:3000/api/rooms/${roomId}/students?page=${currentPage}&limit=${itemsPerPage}`
+          `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/students?page=${currentPage}&limit=${itemsPerPage}`
         );
         const data = await response.json();
         if (data.success) {
