@@ -66,7 +66,7 @@ export default function ExamForm({ mode = "create" }) {
       const username = sessionStorage.getItem("username");
       const examinerName = sessionStorage.getItem("examinerName");
       
-      const response = await axios.post('http://localhost:3000/api/rooms', {
+      const response = await axios.post('https://codeguard-server-side-walb.onrender.com/api/rooms', {
         roomId: roomId.replace(/\s+/g, '-').toLowerCase(),
         password: roomPassword,
         examName: examName,

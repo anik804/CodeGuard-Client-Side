@@ -298,7 +298,7 @@ function SubmissionsTab({ roomId }) {
 
   const fetchSubmissions = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/submissions/${roomId}/submissions`);
+      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/${roomId}/submissions`);
       const data = await response.json();
       if (data.success) {
         setSubmissions(data.submissions || []);
@@ -338,7 +338,7 @@ function SubmissionsTab({ roomId }) {
                   <Button
                     onClick={async () => {
                       try {
-                        const response = await fetch(`http://localhost:3000/api/submissions/submission/${submission._id}/download`);
+                        const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/submission/${submission._id}/download`);
                         const data = await response.json();
                         if (data.success) {
                           window.open(data.url, '_blank');
@@ -357,7 +357,7 @@ function SubmissionsTab({ roomId }) {
                   <Button
                     onClick={async () => {
                       try {
-                        const response = await fetch(`http://localhost:3000/api/submissions/submission/${submission._id}/download`);
+                        const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/submission/${submission._id}/download`);
                         const data = await response.json();
                         if (data.success) {
                           const a = document.createElement('a');
