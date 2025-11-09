@@ -1,6 +1,6 @@
+import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
@@ -60,7 +60,7 @@ export function StudentDashboardContent({ onStudentNameChange }) {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/api/rooms/validate', {
+      const response = await fetch('https://codeguard-server-side-walb.onrender.com/api/rooms/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

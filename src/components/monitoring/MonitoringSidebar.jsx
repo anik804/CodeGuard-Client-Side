@@ -1,11 +1,11 @@
-import { useState, useEffect, useRef } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
-import { Users, AlertTriangle, X, Plus } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertTriangle, Plus, Users, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Pagination } from "./Pagination";
-import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
 
 // Students Tab Content
 function StudentsTab({ roomId }) {
@@ -25,7 +25,7 @@ function StudentsTab({ roomId }) {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/rooms/${roomId}/students?page=${page}&limit=${itemsPerPage}`
+        `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/students?page=${page}&limit=${itemsPerPage}`
       );
       const data = await response.json();
       if (data.success) {
@@ -151,7 +151,7 @@ function ActivityTab({ roomId, flaggedStudents }) {
     
     try {
       const response = await fetch(
-        `http://localhost:3000/api/proctoring/logs?roomId=${roomId}&page=${page}&limit=${itemsPerPage}`
+        `https://codeguard-server-side-walb.onrender.com/api/proctoring/logs?roomId=${roomId}&page=${page}&limit=${itemsPerPage}`
       );
       const data = await response.json();
       if (data.success) {
@@ -301,7 +301,7 @@ function BlockedWebsitesTab({ roomId }) {
   const fetchWebsites = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/proctoring/blocked-websites/${roomId}`
+        `https://codeguard-server-side-walb.onrender.com/api/proctoring/blocked-websites/${roomId}`
       );
       const data = await response.json();
       if (data.success) {
@@ -323,7 +323,7 @@ function BlockedWebsitesTab({ roomId }) {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/proctoring/blocked-websites/${roomId}`,
+        `https://codeguard-server-side-walb.onrender.com/api/proctoring/blocked-websites/${roomId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -349,7 +349,7 @@ function BlockedWebsitesTab({ roomId }) {
   const handleRemove = async (website) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/proctoring/blocked-websites/${roomId}`,
+        `https://codeguard-server-side-walb.onrender.com/api/proctoring/blocked-websites/${roomId}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },

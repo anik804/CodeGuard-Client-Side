@@ -1,8 +1,8 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { Users, ChevronRight } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronRight, Users } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Pagination } from "./Pagination";
-import { useState, useEffect } from "react";
 
 export function StudentSidebar({ 
   isOpen, 
@@ -27,7 +27,7 @@ export function StudentSidebar({
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/rooms/${roomId}/students?page=${page}&limit=${itemsPerPage}`
+        `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/students?page=${page}&limit=${itemsPerPage}`
       );
       const data = await response.json();
       if (data.success) {

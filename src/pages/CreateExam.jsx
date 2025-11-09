@@ -1,15 +1,15 @@
-import { motion } from "framer-motion";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Clock, FileText, Users, Lock, Bell } from "lucide-react";
-import { toast } from "sonner";
-import { useState, useEffect, useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
+import { motion } from "framer-motion";
+import { Calendar, Clock, FileText, Lock, Users } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { AuthContext } from "../provider/AuthProvider";
 
 export default function CreateExam() {
@@ -63,7 +63,7 @@ export default function CreateExam() {
       const username = sessionStorage.getItem("username");
       const examinerName = sessionStorage.getItem("examinerName");
       
-      const response = await axios.post('http://localhost:3000/api/rooms', {
+      const response = await axios.post('https://codeguard-server-side-walb.onrender.com/api/rooms', {
         roomId: roomId.replace(/\s+/g, '-').toLowerCase(),
         password: roomPassword,
         examName: examName,
