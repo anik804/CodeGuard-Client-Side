@@ -339,7 +339,7 @@ export default function StudentDashboard2() {
       className="h-40"
     >
       <Card
-        className={`h-full rounded-2xl shadow-md border-none overflow-hidden bg-gradient-to-br ${stat.color} flex flex-col justify-between p-6`}
+        className={`h-full rounded-2xl shadow-md border-none overflow-hidden bg-linear-to-br ${stat.color} flex flex-col justify-between p-6`}
       >
         <div className="flex justify-between items-center">
           <div>
@@ -413,7 +413,7 @@ export default function StudentDashboard2() {
           animate={{ opacity: 1, y: 0 }}
           className="mt-8"
         >
-          <Card className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30">
+          <Card className="bg-linear-to-r from-cyan-500/20 to-blue-500/20 border-cyan-500/30">
             <div className="p-6 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-semibold text-cyan-600">
