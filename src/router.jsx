@@ -89,14 +89,12 @@ const router = createBrowserRouter([
       { path: "stu-profile", element: <StudentProfile /> },
     ],
   },
-  // Monitoring page (examiner only)
+  // Monitoring page (examiner only) - Full screen without sidebar
   {
     path: "/monitoring/:roomId",
     element: (
       <PrivateRoute allowedRoles={["examiner"]}>
-        <DashboardLayout>
-          <MonitoringDashboardPage />
-        </DashboardLayout>
+        <MonitoringDashboardPage />
       </PrivateRoute>
     ),
   },

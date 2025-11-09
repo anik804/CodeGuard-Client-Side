@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import Peer from "simple-peer";
-import { Maximize2, Minimize2, User, X } from "lucide-react";
+import { Maximize2, Minimize2, User, X, UserX } from "lucide-react";
 import { Button } from "./ui/button";
 
-const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A", isFlagged = false, onDismissFlag }) => {
+const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A", socketId, isFlagged = false, onDismissFlag, onKickStudent }) => {
   const ref = useRef(null);
   const containerRef = useRef(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -73,18 +73,32 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
         isFlagged ? "ring-4 ring-red-500 ring-offset-2" : ""
       }`}
     >
-      {isFlagged && onDismissFlag && (
-        <Button
-          onClick={() => onDismissFlag(studentId)}
-          variant="ghost"
-          size="sm"
-          className="absolute top-2 left-2 z-10 bg-red-500 hover:bg-red-600 text-white border border-red-600 rounded-md h-7 px-2 text-xs font-medium shadow-lg"
-          title="Dismiss false alarm"
-        >
-          <X className="w-3 h-3 mr-1" />
-          Dismiss
-        </Button>
-      )}
+      <div className="absolute top-2 left-2 z-10 flex gap-2">
+        {isFlagged && onDismissFlag && (
+          <Button
+            onClick={() => onDismissFlag(studentId)}
+            variant="ghost"
+            size="sm"
+            className="bg-red-500 hover:bg-red-600 text-white border border-red-600 rounded-md h-7 px-2 text-xs font-medium shadow-lg"
+            title="Dismiss false alarm"
+          >
+            <X className="w-3 h-3 mr-1" />
+            Dismiss
+          </Button>
+        )}
+        {onKickStudent && (
+          <Button
+            onClick={() => onKickStudent()}
+            variant="ghost"
+            size="sm"
+            className="bg-orange-500 hover:bg-orange-600 text-white border border-orange-600 rounded-md h-7 px-2 text-xs font-medium shadow-lg"
+            title="Kick student"
+          >
+            <UserX className="w-3 h-3 mr-1" />
+            Kick
+          </Button>
+        )}
+      </div>
       <div className={`relative bg-gradient-to-br from-gray-900 to-black flex justify-center items-center aspect-video group ${
         isFlagged ? "ring-4 ring-red-500" : ""
       }`}>
