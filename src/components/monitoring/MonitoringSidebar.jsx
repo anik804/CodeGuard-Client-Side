@@ -3,7 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Users, AlertTriangle, X, Plus, FileText, Eye, FileDown } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";npm
 import { Pagination } from "./Pagination";
 
 // Students Tab Content
