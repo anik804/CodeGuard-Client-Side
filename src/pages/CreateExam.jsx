@@ -272,7 +272,7 @@ export default function CreateExam() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex gap-4">
+            {/* <div className="flex gap-4">
               <Button
                 type="submit"
                 className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
@@ -299,7 +299,36 @@ export default function CreateExam() {
               >
                 Clear
               </Button>
-            </div>
+            </div> */}
+            {/* Submit and Clear Buttons */}
+<div className="flex justify-center gap-4 mt-6">
+  <Button
+    type="submit"
+    className="w-48 h-10 text-sm font-semibold rounded-lg bg-black text-white hover:bg-gray-800 transition-all"
+    disabled={isLoading}
+  >
+    {isLoading ? 'Creating Exam...' : 'Create Exam'}
+  </Button>
+  <Button
+    type="button"
+    className="w-48 h-10 text-sm font-semibold rounded-lg bg-black text-white hover:bg-gray-800 transition-all"
+    onClick={() => {
+      // Reset form
+      setExamName('');
+      setRoomId('');
+      setDescription('');
+      setDuration('');
+      setStartTime('');
+      setSubject('');
+      setMaxStudents('');
+      setProctoringLevel('');
+      setRoomPassword('');
+    }}
+  >
+    Clear
+  </Button>
+</div>
+
           </form>
         </CardContent>
       </Card>
