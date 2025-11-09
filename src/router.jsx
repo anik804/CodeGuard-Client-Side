@@ -1,63 +1,3 @@
-// import { createBrowserRouter } from "react-router";
-// import AuthLayout from "./layouts/AuthLayout";
-// import App from "./App";
-// import Home from "./pages/Home";
-// import Login from "./components/Login";
-// import { ExaminerDashboardContent } from "./pages/ExaminerDashboard";
-// import MonitoringDashboardPage from "./pages/MonitoringDashboard";
-// import { StudentDashboardContent } from "./pages/StudentDashboard";
-// import PrivateRoute from "./provider/PrivateRoute";
-
-// const router = createBrowserRouter([
-//   {
-//     path: "/",
-//     element: <App />,
-//     children: [
-//       {
-//         index: true,
-//         element: <Home />,
-//       },
-//     ],
-//   },
-//   {
-//     path: "/auth",
-//     element: <AuthLayout />,
-//     children: [
-//       {
-//         path: "/auth/login",
-//         element: <Login />,
-//       },
-//     ],
-//   },
-//   {
-//     path: "/examiner-dashboard",
-//     element: (
-//       <PrivateRoute allowedRoles={["examiner"]}>
-//         <ExaminerDashboardContent />
-//       </PrivateRoute>
-//     ),
-//   },
-//   {
-//     path: "/student-dashboard",
-//     element: (
-//       <PrivateRoute allowedRoles={["student"]}>
-//         <StudentDashboardContent />
-//       </PrivateRoute>
-//     ),
-//   },
-//   {
-//     path: "/monitoring/:roomId",
-//     element: (
-//       <PrivateRoute allowedRoles={["examiner"]}>
-//         <MonitoringDashboardPage />
-//       </PrivateRoute>
-//     ),
-//   },
-// ]);
-
-// export default router;
-
-
 import { createBrowserRouter } from "react-router-dom";
 import App from "./App";
 import Login from "./components/Login";
@@ -70,19 +10,17 @@ import ExamHistoryPage from "./pages/ExamHistory";
 import Home from "./pages/Home";
 import MonitoringDashboardPage from "./pages/MonitoringDashboard";
 import ScheduleExamPage from "./pages/ScheduleExam";
-// import { StudentDashboardContent } from "./pages/StudentDashboard";
 import PrivateRoute from "./provider/PrivateRoute";
 import { Outlet } from "react-router";
 import Profile from "./pages/Profile";
 import { ExaminerDashboardContent } from "./pages/ExaminerDashboard";
 import StudentDashboard2 from "./pages/StudentDashboard2";
-// import JoinExam from "./pages/JoinExam";
 import StudentProfile from "./pages/StudentProfile";
 import { StudentDashboardContent } from "./pages/StudentDashboard";
 import ExamInstructionPage from "./pages/ExamInstructionPage";
-// import JoinExam from "./pages/JoinExam";
-// import StudentProfile from "./pages/StudentProfile";
-// import StudentProfile from "./pages/StudentProfile";
+// import AboutUs from "./pages/AboutUs";
+import ContactUs from "./pages/ContactUs";
+import AboutUs from "./pages/AboutUs";
 
 const router = createBrowserRouter([
   {
@@ -92,6 +30,15 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: "/contact-us",
+        element: <ContactUs></ContactUs>,
+      },
+      {
+        path: "/about-us",
+        // Component: <AboutUs></AboutUs>,
+        element: <AboutUs></AboutUs>,
       },
     ],
   },
@@ -121,7 +68,7 @@ const router = createBrowserRouter([
       { path: "create-exam", element: <CreateExamPage /> },
       { path: "schedule-exam", element: <ScheduleExamPage /> },
       { path: "exam-history", element: <ExamHistoryPage /> },
-      { path: "profile" , element: <Profile></Profile>}
+      { path: "profile", element: <Profile></Profile> },
     ],
   },
   // Student Dashboard
@@ -134,13 +81,16 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <StudentDashboard2 /> }, // Overview
-      { path: "join-exam", element: <StudentDashboardContent></StudentDashboardContent> },
+      {
+        path: "join-exam",
+        element: <StudentDashboardContent></StudentDashboardContent>,
+      },
       { path: "exam/:roomId", element: <ExamInstructionPage /> },
       { path: "stu-profile", element: <StudentProfile /> },
     ],
   },
   // Monitoring page (examiner only)
-    {
+  {
     path: "/monitoring/:roomId",
     element: (
       <PrivateRoute allowedRoles={["examiner"]}>
