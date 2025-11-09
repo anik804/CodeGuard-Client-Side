@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ExamInstructions } from '../components/ExamInstruction';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ExamInstructions } from '../components/ExamInstruction';
 
 export default function ExamInstructionPage() {
   const { roomId } = useParams();
@@ -35,7 +35,7 @@ export default function ExamInstructionPage() {
     // Fetch exam details
     const fetchExamDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/rooms/${roomId}/exam-details`);
+        const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/exam-details`);
         const data = await response.json();
         if (data.success && data.room) {
           setExamDetails(data.room);
@@ -51,7 +51,7 @@ export default function ExamInstructionPage() {
 
     // Fetch student name from API if not in sessionStorage (fallback)
     if (studentId && !storedName) {
-      axios.get(`http://localhost:3000/api/students/${studentId}`)
+      axios.get(`https://codeguard-server-side-walb.onrender.com/api/students/${studentId}`)
         .then(res => {
           if (res.data?.name) {
             setUsername(res.data.name);

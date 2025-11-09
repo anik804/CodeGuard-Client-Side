@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import io from "socket.io-client";
@@ -28,10 +29,10 @@ import {
 } from "lucide-react";
 
 // Components
-import { MonitoringHeader } from "../components/monitoring/MonitoringHeader";
 import { ExamInfoSection } from "../components/monitoring/ExamInfoSection";
-import { StatsSection } from "../components/monitoring/StatsSection";
+import { MonitoringHeader } from "../components/monitoring/MonitoringHeader";
 import { MonitoringSidebar } from "../components/monitoring/MonitoringSidebar";
+import { StatsSection } from "../components/monitoring/StatsSection";
 import { StudentVideoGrid } from "../components/monitoring/StudentVideoGrid";
 
 const containerVariants = {
@@ -100,10 +101,10 @@ export default function MonitoringDashboardPage() {
   useEffect(() => {
     if (!roomId || typeof window === "undefined") return;
 
-    socketRef.current = io("http://localhost:3000");
+    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
 
     // Fetch exam details
-    fetch(`http://localhost:3000/api/rooms/${roomId}/exam-details`)
+    fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/exam-details`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.room) {
@@ -219,7 +220,7 @@ export default function MonitoringDashboardPage() {
 
     try {
       const response = await axios.post(
-        `http://localhost:3000/api/rooms/${roomId}/question`,
+        `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question`,
         formData,
         {
           headers: {
@@ -251,7 +252,7 @@ export default function MonitoringDashboardPage() {
   const startExam = async () => {
     try {
       if (examDetails) {
-        await fetch(`http://localhost:3000/api/rooms/${roomId}/exam-details`, {
+        await fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/exam-details`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

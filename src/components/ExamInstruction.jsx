@@ -46,7 +46,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
     if (!roomId || typeof window === "undefined") return;
 
     // ✅ Connect to signaling server immediately
-    socketRef.current = io("http://localhost:3000");
+    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
     
     // Get student ID from sessionStorage
     const studentId = sessionStorage.getItem('studentId') || 'unknown';
@@ -284,7 +284,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
   // ✅ validate room again before starting screen share (extra safety)
   // const validateRoom = async () => {
   //   try {
-  //     const response = await axios.post("http://localhost:3000/api/rooms/validate", {
+  //     const response = await axios.post("https://codeguard-server-side-walb.onrender.com/api/rooms/validate", {
   //       roomId,
   //       password: "", // optional if already validated before joining
   //     });
@@ -391,7 +391,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
+                        const proxyUrl = `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question/download`;
                         
                         const loadingToast = toast.loading("Preparing PDF view...");
                         const headers = {};
@@ -445,7 +445,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
+                        const proxyUrl = `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question/download`;
                         
                         const loadingToast = toast.loading("Preparing PDF download...");
                         const headers = {};
