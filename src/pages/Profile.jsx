@@ -4,10 +4,58 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User, Mail, Phone, Building, Save } from "lucide-react";
+import { User, Mail, Phone, Building, Save, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useEffect, useState, useContext } from "react";
+import { AuthContext } from "../provider/AuthProvider";
+import axios from "axios";
 
 export default function Profile() {
+  const { user } = useContext(AuthContext);
+  const [examinerInfo, setExaminerInfo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [examinerName, setExaminerName] = useState("");
+  const [examinerEmail, setExaminerEmail] = useState("");
+  const [examinerUsername, setExaminerUsername] = useState("");
+
+  useEffect(() => {
+    const username = sessionStorage.getItem("username");
+    const name = sessionStorage.getItem("examinerName");
+    
+    if (name) {
+      setExaminerName(name);
+    } else if (username) {
+      setExaminerName(username);
+    }
+    
+    if (username) {
+      setExaminerUsername(username);
+      // Fetch examiner details from backend
+      fetchExaminerDetails(username);
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
+
+  const fetchExaminerDetails = async (username) => {
+    try {
+      // You may need to create an endpoint to get examiner details
+      // For now, use sessionStorage data
+      const name = sessionStorage.getItem("examinerName") || username;
+      setExaminerInfo({
+        name,
+        username,
+        email: user?.email || ""
+      });
+      setExaminerName(name);
+      setExaminerEmail(user?.email || "");
+    } catch (error) {
+      console.error("Failed to fetch examiner details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     toast.success("Profile updated successfully!");
@@ -28,8 +76,16 @@ export default function Profile() {
               <AvatarFallback>TC</AvatarFallback>
             </Avatar>
             <div className="text-center md:text-left flex-1">
-              <h2 className="text-3xl font-bold gradient-text">Anik</h2>
-              <p className="text-muted-foreground mt-1">CSE Department</p>
+              {loading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                <>
+                  <h2 className="text-3xl font-bold gradient-text">{examinerName || "Examiner"}</h2>
+                  <p className="text-muted-foreground mt-1">
+                    {examinerUsername ? `Username: ${examinerUsername}` : "Examiner Account"}
+                  </p>
+                </>
+              )}
               <div className="flex flex-wrap gap-2 mt-4 justify-center md:justify-start">
                 <Button variant="outline" size="sm">Change Avatar</Button>
                 <Button variant="outline" size="sm">Change Password</Button>
@@ -56,7 +112,8 @@ export default function Profile() {
                 </Label>
                 <Input
                   id="firstName"
-                  defaultValue="Anik"
+                  value={examinerName.split(' ')[0] || examinerName || ""}
+                  onChange={(e) => setExaminerName(e.target.value)}
                   className="bg-secondary/50"
                 />
               </div>
@@ -65,7 +122,8 @@ export default function Profile() {
                 <Label htmlFor="lastName">Last Name</Label>
                 <Input
                   id="lastName"
-                  defaultValue="Chakraborty"
+                  value={examinerName.split(' ').slice(1).join(' ') || ""}
+                  onChange={(e) => setExaminerName(examinerName.split(' ')[0] + ' ' + e.target.value)}
                   className="bg-secondary/50"
                 />
               </div>
@@ -81,7 +139,8 @@ export default function Profile() {
                 <Input
                   id="email"
                   type="email"
-                  defaultValue="chakrabortyanik234@gmail.com"
+                  value={examinerEmail || user?.email || ""}
+                  onChange={(e) => setExaminerEmail(e.target.value)}
                   className="bg-secondary/50"
                 />
               </div>
@@ -117,7 +176,7 @@ export default function Profile() {
                 <Label htmlFor="employeeId">User ID</Label>
                 <Input
                   id="employeeId"
-                  defaultValue="CS-001"
+                  value={examinerUsername || ""}
                   className="bg-secondary/50"
                   disabled
                 />

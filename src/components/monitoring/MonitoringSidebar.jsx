@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Users, AlertTriangle, X, Plus } from "lucide-react";
 import { Button } from "../ui/button";
@@ -97,41 +97,115 @@ function ActivityTab({ roomId, flaggedStudents }) {
   const [logs, setLogs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Only show loading on initial load
+  const seenLogIdsRef = useRef(new Set()); // Use ref for synchronous access
+  const newLogIdsRef = useRef(new Set()); // Track newly added log IDs for highlighting
+  const isInitialLoad = useRef(true);
   const itemsPerPage = 10;
 
   useEffect(() => {
     if (roomId) {
-      fetchLogs(currentPage);
+      // Reset tracking when room changes
+      seenLogIdsRef.current.clear();
+      newLogIdsRef.current.clear();
+      isInitialLoad.current = true;
+      
+      // Initial load - load the page user requested
+      fetchLogs(currentPage, true);
+      
+      // Refresh every 5 seconds without showing loading
+      // Only check for new logs if user is on page 1
       const interval = setInterval(() => {
-        fetchLogs(currentPage);
+        if (currentPage === 1) {
+          // Silently check for new logs and append them
+          fetchLogs(1, false);
+        }
+        // If user is on other pages, don't refresh (they can manually navigate)
       }, 5000);
+      
       return () => clearInterval(interval);
     }
   }, [roomId, currentPage]);
 
-  const fetchLogs = async (page) => {
-    setLoading(true);
+  // Remove highlight from new logs after 3 seconds
+  useEffect(() => {
+    if (newLogIdsRef.current.size > 0) {
+      const timer = setTimeout(() => {
+        if (newLogIdsRef.current.size > 0) {
+          newLogIdsRef.current.clear();
+          // Trigger re-render to remove highlight
+          setLogs(prev => [...prev]);
+        }
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [logs.length]); // Only re-run when log count changes
+
+  const fetchLogs = async (page, isInitial = false) => {
+    // Only show loading on initial load
+    if (isInitial) {
+      setLoading(true);
+      isInitialLoad.current = true;
+    }
+    
     try {
       const response = await fetch(
         `http://localhost:3000/api/proctoring/logs?roomId=${roomId}&page=${page}&limit=${itemsPerPage}`
       );
       const data = await response.json();
       if (data.success) {
-        setLogs(data.logs || []);
-        setPagination(data.pagination);
+        const fetchedLogs = data.logs || [];
+        
+        if (isInitial) {
+          // Initial load: set all logs for the requested page
+          setLogs(fetchedLogs);
+          // Track all log IDs as seen
+          fetchedLogs.forEach(log => {
+            const logId = `${log._id || log.studentId}-${log.timestamp}`;
+            seenLogIdsRef.current.add(logId);
+          });
+          setPagination(data.pagination);
+        } else {
+          // Subsequent refreshes (only called for page 1): only add new logs
+          // This ensures seamless appending of new logs without showing loading
+          if (page === 1) {
+            const newLogs = fetchedLogs.filter(log => {
+              const logId = `${log._id || log.studentId}-${log.timestamp}`;
+              if (!seenLogIdsRef.current.has(logId)) {
+                seenLogIdsRef.current.add(logId);
+                newLogIdsRef.current.add(logId); // Mark as new for highlighting
+                return true;
+              }
+              return false;
+            });
+            
+            if (newLogs.length > 0) {
+              // Prepend new logs to the beginning with smooth animation
+              setLogs(prevLogs => [...newLogs, ...prevLogs]);
+              
+              // Update pagination if needed
+              if (data.pagination) {
+                setPagination(data.pagination);
+              }
+            }
+          }
+        }
       }
     } catch (error) {
       console.error("Failed to fetch logs:", error);
     } finally {
-      setLoading(false);
+      if (isInitial) {
+        setLoading(false);
+        isInitialLoad.current = false;
+      }
     }
   };
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
-        {loading ? (
+        {loading && isInitialLoad.current ? (
           <div className="flex flex-col items-center justify-center mt-12 py-8">
             <div className="w-8 h-8 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
             <p className="text-slate-400 text-xs text-center font-medium mt-3">
@@ -151,15 +225,22 @@ function ActivityTab({ roomId, flaggedStudents }) {
             </p>
           </div>
         ) : (
-          <AnimatePresence>
-            {logs.map((log, i) => (
-              <motion.div
-                key={`${log.studentId}-${log.timestamp}-${i}`}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="border border-red-500/30 bg-red-500/10 p-2.5 rounded-md hover:bg-red-500/15 transition-colors"
-              >
+          <AnimatePresence mode="popLayout">
+            {logs.map((log) => {
+              const logId = `${log._id || log.studentId}-${log.timestamp}`;
+              const isNew = newLogIdsRef.current.has(logId);
+              
+              return (
+                <motion.div
+                  key={logId}
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.3 }}
+                  className={`border border-red-500/30 bg-red-500/10 p-2.5 rounded-md hover:bg-red-500/15 transition-all duration-300 ${
+                    isNew ? 'ring-2 ring-yellow-400/50 ring-offset-2 ring-offset-slate-800 bg-yellow-500/5' : ''
+                  }`}
+                >
                 <div className="flex items-start space-x-2">
                   <div className="shrink-0 mt-0.5">
                     <AlertTriangle className="text-red-400 w-4 h-4" />
@@ -185,7 +266,8 @@ function ActivityTab({ roomId, flaggedStudents }) {
                   </div>
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </AnimatePresence>
         )}
       </div>
@@ -202,9 +284,11 @@ function ActivityTab({ roomId, flaggedStudents }) {
   );
 }
 
-// Blocked Websites Management Tab
+// Website Access Control Tab (Whitelist - allowed websites)
 function BlockedWebsitesTab({ roomId }) {
-  const [websites, setWebsites] = useState([]);
+  const [allAllowed, setAllAllowed] = useState([]);
+  const [defaultAllowed, setDefaultAllowed] = useState([]);
+  const [customAllowed, setCustomAllowed] = useState([]);
   const [newWebsite, setNewWebsite] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -221,10 +305,12 @@ function BlockedWebsitesTab({ roomId }) {
       );
       const data = await response.json();
       if (data.success) {
-        setWebsites(data.websites || []);
+        setAllAllowed(data.allowedWebsites || []);
+        setDefaultAllowed(data.defaultAllowed || []);
+        setCustomAllowed(data.customAllowed || []);
       }
     } catch (error) {
-      console.error("Failed to fetch blocked websites:", error);
+      console.error("Failed to fetch allowed websites:", error);
     }
   };
 
@@ -246,14 +332,14 @@ function BlockedWebsitesTab({ roomId }) {
       );
       const data = await response.json();
       if (data.success) {
-        toast.success("Website blocked successfully");
+        toast.success("Website added to allowed list successfully");
         setNewWebsite("");
         fetchWebsites();
       } else {
-        toast.error(data.message || "Failed to block website");
+        toast.error(data.message || "Failed to add website");
       }
     } catch (error) {
-      toast.error("Failed to block website");
+      toast.error("Failed to add website");
       console.error(error);
     } finally {
       setLoading(false);
@@ -272,13 +358,13 @@ function BlockedWebsitesTab({ roomId }) {
       );
       const data = await response.json();
       if (data.success) {
-        toast.success("Website unblocked successfully");
+        toast.success("Website removed from allowed list successfully");
         fetchWebsites();
       } else {
-        toast.error(data.message || "Failed to unblock website");
+        toast.error(data.message || "Failed to remove website");
       }
     } catch (error) {
-      toast.error("Failed to unblock website");
+      toast.error("Failed to remove website");
       console.error(error);
     }
   };
@@ -286,6 +372,9 @@ function BlockedWebsitesTab({ roomId }) {
   return (
     <div className="flex flex-col h-full">
       <div className="p-3 border-b border-slate-700/50">
+        <p className="text-xs text-slate-400 mb-2">
+          All websites are blocked by default. Add websites to allow access.
+        </p>
         <div className="flex gap-2">
           <Input
             placeholder="e.g., example.com"
@@ -303,35 +392,61 @@ function BlockedWebsitesTab({ roomId }) {
           </Button>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
-        {websites.length === 0 ? (
+      <div className="flex-1 overflow-y-auto p-2 space-y-2 scrollbar-thin scrollbar-thumb-slate-600 scrollbar-track-slate-800">
+        {/* Default Allowed Websites */}
+        {defaultAllowed.length > 0 && (
+          <div>
+            <p className="text-xs text-slate-500 font-medium mb-2 px-1">Default Allowed (Cannot be removed)</p>
+            {defaultAllowed.map((website, index) => (
+              <div
+                key={`default-${index}`}
+                className="flex items-center justify-between p-2 bg-green-500/10 border border-green-500/30 rounded-md"
+              >
+                <span className="text-xs text-green-300 truncate flex-1">
+                  {website}
+                </span>
+                <span className="text-[10px] text-green-400/70 px-1.5 py-0.5 bg-green-500/20 rounded">
+                  Default
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Custom Allowed Websites */}
+        {customAllowed.length > 0 && (
+          <div>
+            <p className="text-xs text-slate-500 font-medium mb-2 px-1 mt-3">Custom Allowed</p>
+            {customAllowed.map((website, index) => (
+              <div
+                key={`custom-${index}`}
+                className="flex items-center justify-between p-2 bg-slate-800/50 rounded-md hover:bg-slate-700/50 transition-colors"
+              >
+                <span className="text-xs text-slate-200 truncate flex-1">
+                  {website}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemove(website)}
+                  className="h-6 w-6 p-0 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {allAllowed.length === 0 && (
           <div className="flex flex-col items-center justify-center mt-12 py-8">
             <p className="text-slate-400 text-xs text-center font-medium">
-              No custom blocked websites
+              No websites allowed yet
             </p>
             <p className="text-slate-500 text-[10px] text-center mt-1">
-              Default websites are always blocked
+              Add websites to allow student access
             </p>
           </div>
-        ) : (
-          websites.map((website, index) => (
-            <div
-              key={index}
-              className="flex items-center justify-between p-2 bg-slate-800/50 rounded-md hover:bg-slate-700/50 transition-colors"
-            >
-              <span className="text-xs text-slate-200 truncate flex-1">
-                {website}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleRemove(website)}
-                className="h-6 w-6 p-0 text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-              >
-                <X className="w-3.5 h-3.5" />
-              </Button>
-            </div>
-          ))
         )}
       </div>
     </div>
@@ -373,7 +488,7 @@ export function MonitoringSidebar({ roomId, flaggedStudents, isOpen, onClose }) 
                   value="blocked" 
                   className="text-xs data-[state=active]:bg-purple-600 data-[state=active]:text-white"
                 >
-                  Blocked
+                  Access Control
                 </TabsTrigger>
               </TabsList>
               <Button

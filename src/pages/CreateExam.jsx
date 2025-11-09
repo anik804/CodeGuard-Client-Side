@@ -5,15 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Clock, FileText, Users, Lock } from "lucide-react";
+import { Calendar, Clock, FileText, Users, Lock, Bell } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { AuthContext } from "../provider/AuthProvider";
 
 export default function CreateExam() {
   const navigate = useNavigate();
-  const [examTitle, setExamTitle] = useState('');
+  const { user } = useContext(AuthContext);
+  const [examName, setExamName] = useState('');
   const [roomId, setRoomId] = useState('');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState('');
@@ -23,6 +25,21 @@ export default function CreateExam() {
   const [proctoringLevel, setProctoringLevel] = useState('');
   const [roomPassword, setRoomPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [examinerInfo, setExaminerInfo] = useState(null);
+
+  useEffect(() => {
+    // Get examiner info from sessionStorage
+    const username = sessionStorage.getItem("username");
+    const name = sessionStorage.getItem("examinerName");
+    
+    // If not in sessionStorage, try to get from user context or make API call
+    if (username) {
+      setExaminerInfo({
+        username,
+        name: name || username
+      });
+    }
+  }, [user]);
 
   const generateRandomPassword = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -36,23 +53,30 @@ export default function CreateExam() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!roomId || !roomPassword || !examTitle) {
-      toast.error("Please provide exam title, room ID, and password");
+    if (!roomId || !roomPassword || !examName) {
+      toast.error("Please provide exam name, room ID, and password");
       return;
     }
 
     setIsLoading(true);
     try {
+      const username = sessionStorage.getItem("username");
+      const examinerName = sessionStorage.getItem("examinerName");
+      
       const response = await axios.post('http://localhost:3000/api/rooms', {
         roomId: roomId.replace(/\s+/g, '-').toLowerCase(),
         password: roomPassword,
-        courseName: examTitle,
+        examName: examName,
+        courseName: examName, // Keep for backward compatibility
         examDuration: duration ? parseInt(duration) : null,
         examDescription: description,
         examSubject: subject,
         maxStudents: maxStudents ? parseInt(maxStudents) : null,
         proctoringLevel: proctoringLevel,
-        startTime: startTime || null
+        startTime: startTime || null,
+        examinerId: username, // Use username as examiner ID
+        examinerName: examinerName || username,
+        examinerUsername: username
       });
 
       if (response.status === 201) {
@@ -91,18 +115,18 @@ export default function CreateExam() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Exam Title */}
+            {/* Exam Name */}
             <div className="space-y-2">
-              <Label htmlFor="title" className="flex items-center gap-2">
+              <Label htmlFor="examName" className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-primary" />
-                Exam Title / Course Name *
+                Exam Name / Title *
               </Label>
               <Input
-                id="title"
+                id="examName"
                 placeholder="e.g., Midterm Exam - Computer Science"
                 className="bg-secondary/50"
-                value={examTitle}
-                onChange={(e) => setExamTitle(e.target.value)}
+                value={examName}
+                onChange={(e) => setExamName(e.target.value)}
                 required
               />
             </div>
@@ -248,7 +272,7 @@ export default function CreateExam() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex gap-4">
+            {/* <div className="flex gap-4">
               <Button
                 type="submit"
                 className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
@@ -256,7 +280,55 @@ export default function CreateExam() {
               >
                 {isLoading ? 'Creating Exam...' : 'Create Exam & Start Monitoring'}
               </Button>
-            </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  // Reset form
+                  setExamName('');
+                  setRoomId('');
+                  setDescription('');
+                  setDuration('');
+                  setStartTime('');
+                  setSubject('');
+                  setMaxStudents('');
+                  setProctoringLevel('');
+                  setRoomPassword('');
+                }}
+              >
+                Clear
+              </Button>
+            </div> */}
+            {/* Submit and Clear Buttons */}
+<div className="flex justify-center gap-4 mt-6">
+  <Button
+    type="submit"
+    className="w-48 h-10 text-sm font-semibold rounded-lg bg-black text-white hover:bg-gray-800 transition-all"
+    disabled={isLoading}
+  >
+    {isLoading ? 'Creating Exam...' : 'Create Exam'}
+  </Button>
+  <Button
+    type="button"
+    className="w-48 h-10 text-sm font-semibold rounded-lg bg-black text-white hover:bg-gray-800 transition-all"
+    onClick={() => {
+      // Reset form
+      setExamName('');
+      setRoomId('');
+      setDescription('');
+      setDuration('');
+      setStartTime('');
+      setSubject('');
+      setMaxStudents('');
+      setProctoringLevel('');
+      setRoomPassword('');
+    }}
+  >
+    Clear
+  </Button>
+</div>
+
           </form>
         </CardContent>
       </Card>
