@@ -64,7 +64,7 @@ import Login from "./components/Login";
 import AuthLayout from "./layouts/AuthLayout";
 import { DashboardLayout } from "./layouts/DashBoardLayout";
 import { StudentDashboardLayout } from "./layouts/StudentDashboardLayout";
-// import CreateExamPage from "./pages/CreateExam";
+import CreateExamPage from "./pages/CreateExam";
 import Dashboard from "./pages/DashBoard";
 import ExamHistoryPage from "./pages/ExamHistory";
 import Home from "./pages/Home";
@@ -79,6 +79,7 @@ import StudentDashboard2 from "./pages/StudentDashboard2";
 // import JoinExam from "./pages/JoinExam";
 import StudentProfile from "./pages/StudentProfile";
 import { StudentDashboardContent } from "./pages/StudentDashboard";
+import ExamInstructionPage from "./pages/ExamInstructionPage";
 // import JoinExam from "./pages/JoinExam";
 // import StudentProfile from "./pages/StudentProfile";
 // import StudentProfile from "./pages/StudentProfile";
@@ -117,7 +118,7 @@ const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <Dashboard></Dashboard> }, // Dashboard Overview
-      { path: "create-exam", element: <ExaminerDashboardContent></ExaminerDashboardContent> },
+      { path: "create-exam", element: <CreateExamPage /> },
       { path: "schedule-exam", element: <ScheduleExamPage /> },
       { path: "exam-history", element: <ExamHistoryPage /> },
       { path: "profile" , element: <Profile></Profile>}
@@ -134,6 +135,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <StudentDashboard2 /> }, // Overview
       { path: "join-exam", element: <StudentDashboardContent></StudentDashboardContent> },
+      { path: "exam/:roomId", element: <ExamInstructionPage /> },
       { path: "stu-profile", element: <StudentProfile /> },
     ],
   },
