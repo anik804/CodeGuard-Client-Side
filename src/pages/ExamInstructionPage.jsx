@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ExamInstructions } from '../components/ExamInstruction';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ExamInstructions } from '../components/ExamInstruction';
 
 export default function ExamInstructionPage() {
   const { roomId } = useParams();

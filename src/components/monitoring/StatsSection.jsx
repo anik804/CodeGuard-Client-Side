@@ -13,26 +13,26 @@ export function StatsSection({
     <section className="p-4 md:p-6 pt-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <StatCard
-          icon={<Users className="text-cyan-400" />}
+          icon={<Users className="text-blue-600" />}
           title="Active Students"
           value={activeStudents.toString()}
           subtitle={`${totalStudents} joined`}
         />
         <StatCard
-          icon={<Bell className="text-red-400" />}
+          icon={<Bell className="text-red-600" />}
           title="Active Alerts"
           value={logsCount.toString()}
           highlight
           subtitle="Flagged activities"
         />
         <StatCard
-          icon={<HeartPulse className="text-emerald-400" />}
+          icon={<HeartPulse className="text-green-600" />}
           title="System Health"
           value="98%"
           subtitle="All systems operational"
         />
         <StatCard
-          icon={<Clock className="text-purple-400" />}
+          icon={<Clock className="text-purple-600" />}
           title="Session Time"
           value={formatTime(timer)}
           subtitle={examStarted ? "Exam in progress" : "Ready to start"}

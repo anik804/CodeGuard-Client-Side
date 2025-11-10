@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button";
+import { GiExpander } from "react-icons/gi";
+import { GoSidebarCollapse } from "react-icons/go";
+
 import {
-  Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
@@ -9,7 +11,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock,
   GraduationCap,
@@ -32,7 +34,7 @@ const menuItems = [
 ];
 
 export function DashboardSidebar() {
-  const { open } = useSidebar();
+  const { open, setOpen } = useSidebar();
   const location = useLocation();
   const navigate = useNavigate();
   const { signOutUser } = useContext(AuthContext);
@@ -47,45 +49,64 @@ export function DashboardSidebar() {
     navigate("/"); // redirect to home
   };
 
-  return (
-    <Sidebar
-      collapsible="icon"
-      className="w-64 border-r border-border bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200"
-    >
-      <SidebarContent className="bg-gray-300">
-        {/* Header */}
-        <div className="p-4 flex items-center gap-3 border-b border-border">
-          <motion.div
-            className="w-10 h-10 rounded-lg bg-blue-200/40 flex items-center justify-center"
-            whileHover={{ scale: 1.05 }}
-          >
-            <GraduationCap className="w-6 h-6 text-blue-700" />
-          </motion.div>
+  const sidebarVariants = {
+    open: { width: 256, transition: { duration: 0.3 } },
+    closed: { width: 80, transition: { duration: 0.3 } },
+  };
 
-          {open && (
+  return (
+    <motion.div
+      variants={sidebarVariants}
+      animate={open ? "open" : "closed"}
+      className="fixed inset-y-0 left-0 z-40 bg-gradient-to-b from-blue-50 via-blue-100 to-blue-200 border-r border-border flex flex-col justify-between overflow-hidden"
+    >
+      <SidebarContent className="flex flex-col justify-between h-full bg-transparent">
+        {/* Header */}
+        <div className="p-4 flex items-center justify-between border-b border-border relative">
+          <div className="flex items-center gap-3">
             <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="flex flex-col"
+              className="w-10 h-10 rounded-lg bg-blue-200/40 flex items-center justify-center"
+              whileHover={{ scale: 1.05 }}
             >
-              <span className="font-bold text-lg gradient-text">CodeGuard</span>
-              <span className="text-xs text-muted-foreground">
-                Teacher Portal
-              </span>
+              <GraduationCap className="w-6 h-6 text-blue-700" />
             </motion.div>
+
+            <AnimatePresence>
+              {open && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="flex flex-col"
+                >
+                  <span className="font-bold text-lg gradient-text">CodeGuard</span>
+                  <span className="text-xs text-muted-foreground">
+                    Teacher Portal
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Collapse button at right side when expanded */}
+          {open && (
+            <Button
+              variant="outline"
+              onClick={() => setOpen(!open)}
+              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200"
+            >
+              <GoSidebarCollapse className="w-5 h-5" />
+            </Button>
           )}
         </div>
 
         {/* Navigation */}
-        <SidebarGroup>
+        <SidebarGroup className="flex-1 overflow-y-auto">
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                  >
+                  <SidebarMenuButton asChild isActive={isActive(item.url)}>
                     <NavLink
                       to={item.url}
                       className={({ isActive }) =>
@@ -97,7 +118,17 @@ export function DashboardSidebar() {
                       }
                     >
                       <item.icon className="w-5 h-5" />
-                      {open && <span>{item.title}</span>}
+                      <AnimatePresence>
+                        {open && (
+                          <motion.span
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -10 }}
+                          >
+                            {item.title}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -106,18 +137,40 @@ export function DashboardSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Logout */}
-        <div className="mt-auto p-4 border-t border-border">
+        {/* Bottom actions */}
+        <div className="p-4 flex flex-col gap-2 border-t border-border">
+          {/* Collapse button at bottom when collapsed */}
+          {!open && (
+            <Button
+              variant="outline"
+              onClick={() => setOpen(!open)}
+              className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 w-full flex justify-center"
+            >
+              <GiExpander className="w-5 h-5" />
+            </Button>
+          )}
+
+          {/* Logout */}
           <Button
             onClick={handleLogout}
             variant="ghost"
             className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-100"
           >
             <LogOut className="w-5 h-5" />
-            {open && <span>Logout</span>}
+            <AnimatePresence>
+              {open && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                >
+                  Logout
+                </motion.span>
+              )}
+            </AnimatePresence>
           </Button>
         </div>
       </SidebarContent>
-    </Sidebar>
+    </motion.div>
   );
 }

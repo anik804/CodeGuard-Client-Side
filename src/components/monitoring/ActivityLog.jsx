@@ -1,8 +1,8 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, Bell, Globe, ChevronRight } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { AlertTriangle, Bell, ChevronRight, Globe } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { Pagination } from "./Pagination";
-import { useState, useEffect } from "react";
 
 export function ActivityLog({ 
   isOpen, 
