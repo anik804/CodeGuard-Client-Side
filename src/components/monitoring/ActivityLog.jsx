@@ -31,7 +31,7 @@ export function ActivityLog({
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/proctoring/logs?roomId=${roomId}&page=${page}&limit=${itemsPerPage}`
+        `https://codeguard-server-side-1.onrender.com/api/proctoring/logs?roomId=${roomId}&page=${page}&limit=${itemsPerPage}`
       );
       const data = await response.json();
       if (data.success) {

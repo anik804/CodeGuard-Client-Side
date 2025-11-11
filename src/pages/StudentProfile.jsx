@@ -21,7 +21,7 @@ export default function StudentProfile() {
 
   const fetchStudentInfo = async (studentId) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/students/${studentId}`);
+      const res = await axios.get(`https://codeguard-server-side-1.onrender.com/api/students/${studentId}`);
       setStudent(res.data);
     } catch (err) {
       console.error(err);
@@ -43,7 +43,7 @@ export default function StudentProfile() {
 
     try {
       setSaving(true);
-      await axios.put(`http://localhost:3000/api/students/${studentId}`, updateData);
+      await axios.put(`https://codeguard-server-side-1.onrender.com/api/students/${studentId}`, updateData);
       alert("Profile updated successfully!");
       setStudent({ ...student, ...updateData });
     } catch (err) {
@@ -206,7 +206,7 @@ export default function StudentProfile() {
 //   const fetchStudentInfo = async (studentId) => {
 //     try {
 //       const res = await axios.get(
-//         `http://localhost:3000/api/students/${studentId}`
+//         `https://codeguard-server-side-1.onrender.com/api/students/${studentId}`
 //       );
 //       setStudent(res.data);
 //     } catch (err) {
