@@ -1,3 +1,4 @@
+
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -222,3 +223,338 @@ export default function Profile() {
     </motion.div>
   );
 }
+
+
+// try 1
+
+// import { motion } from "framer-motion";
+
+
+// import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { User, Mail, Shield, Save, Loader2 } from "lucide-react";
+// import { toast } from "sonner";
+// import { useEffect, useState } from "react";
+// import axios from "axios";
+
+// export default function Profile() {
+//   const [examiner, setExaminer] = useState(null);
+//   const [loading, setLoading] = useState(true);
+//   const [saving, setSaving] = useState(false);
+
+// //   const username = "irfan54"; // static for now, can be from AuthContext/session
+
+// //   useEffect(() => {
+// //   const fetchExaminer = async () => {
+// //     try {
+// //       const res = await axios.get(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`);
+// //       setExaminer(res.data);
+// //     } catch (error) {
+// //       console.error("Failed to fetch examiner:", error);
+// //     }
+// //   };
+// //   fetchExaminer();
+// // }, [username]);
+
+// const username = localStorage.getItem("username");
+
+// useEffect(() => {
+//   if (!username) {
+//     console.warn("Username not found in localStorage");
+//     return;
+//   }
+
+//   axios.get(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`)
+//     .then(res => setExaminer(res.data))
+//     .catch(err => console.error(err));
+// }, [username]);
+
+
+
+
+//   const fetchExaminer = async () => {
+//     try {
+//       const res = await axios.get(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`);
+//       setExaminer(res.data);
+//     } catch (error) {
+//       console.error("Failed to fetch examiner:", error);
+//       toast.error("Failed to load profile data");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setSaving(true);
+//     try {
+//       await axios.put(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`, {
+//         name: examiner.name,
+//         email: examiner.email,
+//         role: examiner.role,
+//       });
+//       toast.success("Profile updated successfully!");
+//     } catch (error) {
+//       console.error("Update failed:", error);
+//       toast.error("Failed to update profile");
+//     } finally {
+//       setSaving(false);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="flex justify-center items-center h-[300px]">
+//         <Loader2 className="w-6 h-6 animate-spin text-primary" />
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+//       {/* Profile Header */}
+//       <Card className="glass-card">
+//         <CardContent className="pt-6 flex flex-col md:flex-row items-center gap-6">
+//           <Avatar className="w-32 h-32 border-4 border-primary/20">
+//             <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=examiner" />
+//             <AvatarFallback>EX</AvatarFallback>
+//           </Avatar>
+//           <div className="text-center md:text-left flex-1">
+//             <h2 className="text-3xl font-bold gradient-text">{examiner?.name}</h2>
+//             <p className="text-muted-foreground mt-1">Username: {examiner?.username}</p>
+//           </div>
+//         </CardContent>
+//       </Card>
+
+//       {/* Profile Details */}
+//       <Card className="glass-card">
+//         <CardHeader>
+//           <CardTitle className="gradient-text">Profile Information</CardTitle>
+//           <CardDescription>Update your account details</CardDescription>
+//         </CardHeader>
+
+//         <CardContent>
+//           <form onSubmit={handleSubmit} className="space-y-6">
+//             <div className="grid md:grid-cols-2 gap-4">
+//               <div className="space-y-2">
+//                 <Label htmlFor="name" className="flex items-center gap-2">
+//                   <User className="w-4 h-4 text-primary" /> Full Name
+//                 </Label>
+//                 <Input
+//                   id="name"
+//                   value={examiner.name || ""}
+//                   onChange={(e) => setExaminer({ ...examiner, name: e.target.value })}
+//                   className="bg-secondary/50"
+//                 />
+//               </div>
+
+//               <div className="space-y-2">
+//                 <Label htmlFor="email" className="flex items-center gap-2">
+//                   <Mail className="w-4 h-4 text-primary" /> Email
+//                 </Label>
+//                 <Input
+//                   id="email"
+//                   type="email"
+//                   value={examiner.email || ""}
+//                   onChange={(e) => setExaminer({ ...examiner, email: e.target.value })}
+//                   className="bg-secondary/50"
+//                 />
+//               </div>
+
+//               <div className="space-y-2">
+//                 <Label htmlFor="role" className="flex items-center gap-2">
+//                   <Shield className="w-4 h-4 text-primary" /> Role
+//                 </Label>
+//                 <Input
+//                   id="role"
+//                   value={examiner.role || ""}
+//                   onChange={(e) => setExaminer({ ...examiner, role: e.target.value })}
+//                   className="bg-secondary/50"
+//                 />
+//               </div>
+
+//               <div className="space-y-2">
+//                 <Label htmlFor="username">Username</Label>
+//                 <Input id="username" value={examiner.username || ""} disabled className="bg-secondary/50" />
+//               </div>
+//             </div>
+
+//             <div className="flex justify-end">
+//               <Button
+//                 type="submit"
+//                 disabled={saving}
+//                 className={`bg-primary hover:bg-primary/90 text-primary-foreground font-semibold ${saving ? "opacity-60 cursor-not-allowed" : ""}`}
+//               >
+//                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+//                 {saving ? "Saving..." : "Save Changes"}
+//               </Button>
+//             </div>
+//           </form>
+//         </CardContent>
+//       </Card>
+//     </motion.div>
+//   );
+// }
+
+
+
+// try 2
+
+
+// import { motion } from "framer-motion";
+// import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+// import { Label } from "@/components/ui/label";
+// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+// import { User, Mail, Shield, Save, Loader2 } from "lucide-react";
+// import { toast } from "sonner";
+// import { useEffect, useState } from "react";
+// import axios from "axios";
+
+// export default function Profile() {
+//   const [examiner, setExaminer] = useState(null);
+//   const [loading, setLoading] = useState(true);
+//   const [saving, setSaving] = useState(false);
+
+//   const username = sessionStorage.getItem("username"); // examiner
+// const email = sessionStorage.getItem("examinerEmail");
+
+// useEffect(() => {
+//   if (!username) return; // যদি login না করা থাকে
+//   const fetchExaminer = async () => {
+//     try {
+//       const res = await axios.get(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`);
+//       setExaminer(res.data);
+//     } catch (err) {
+//       console.error("Failed to fetch examiner:", err);
+//       toast.error("Failed to load profile");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+//   fetchExaminer();
+// }, [username]);
+
+
+//   // const handleSubmit = async (e) => {
+//   //   e.preventDefault();
+//   //   setSaving(true);
+//   //   try {
+//   //     await axios.put(`https://codeguard-server-side-1.onrender.com/api/examiners/${email}`, {
+//   //       name: examiner.name,
+//   //       role: examiner.role,
+//   //     });
+//   //     toast.success("Profile updated successfully!");
+//   //   } catch (err) {
+//   //     console.error(err);
+//   //     toast.error("Failed to update profile");
+//   //   } finally {
+//   //     setSaving(false);
+//   //   }
+//   // };
+
+//   const handleSubmit = async (e) => {
+//   e.preventDefault();
+//   setSaving(true);
+//   try {
+//     await axios.put(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`, {
+//       name: examiner.name,
+//       email: examiner.email,
+//       role: examiner.role,
+//     });
+//     toast.success("Profile updated successfully!");
+//   } catch (error) {
+//     console.error(error);
+//     toast.error("Failed to update profile");
+//   } finally {
+//     setSaving(false);
+//   }
+// };
+
+
+//   if (loading) return <Loader2 className="w-6 h-6 animate-spin text-primary" />;
+
+//   return (
+//     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+//       {/* Profile Header */}
+//       <Card className="glass-card">
+//         <CardContent className="pt-6 flex flex-col md:flex-row items-center gap-6">
+//           <Avatar className="w-32 h-32 border-4 border-primary/20">
+//             <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=examiner" />
+//             <AvatarFallback>EX</AvatarFallback>
+//           </Avatar>
+//           <div className="text-center md:text-left flex-1">
+//             <h2 className="text-3xl font-bold gradient-text">{examiner.name}</h2>
+//             <p className="text-muted-foreground mt-1">Username: {examiner.username}</p>
+//           </div>
+//         </CardContent>
+//       </Card>
+
+//       {/* Profile Form */}
+//       <Card className="glass-card">
+//         <CardHeader>
+//           <CardTitle className="gradient-text">Profile Information</CardTitle>
+//           <CardDescription>Update your account details</CardDescription>
+//         </CardHeader>
+
+//         <CardContent>
+//           <form onSubmit={handleSubmit} className="space-y-6">
+//             <div className="grid md:grid-cols-2 gap-4">
+//               <div className="space-y-2">
+//                 <Label htmlFor="name" className="flex items-center gap-2">
+//                   <User className="w-4 h-4 text-primary" /> Full Name
+//                 </Label>
+//                 <Input
+//                   id="name"
+//                   value={examiner.name || ""}
+//                   onChange={(e) => setExaminer({ ...examiner, name: e.target.value })}
+//                   className="bg-secondary/50"
+//                 />
+//               </div>
+
+//               <div className="space-y-2">
+//                 <Label htmlFor="role" className="flex items-center gap-2">
+//                   <Shield className="w-4 h-4 text-primary" /> Role
+//                 </Label>
+//                 <Input
+//                   id="role"
+//                   value={examiner.role || ""}
+//                   onChange={(e) => setExaminer({ ...examiner, role: e.target.value })}
+//                   className="bg-secondary/50"
+//                 />
+//               </div>
+
+//               <div className="space-y-2">
+//                 <Label htmlFor="email" className="flex items-center gap-2">
+//                   <Mail className="w-4 h-4 text-primary" /> Email
+//                 </Label>
+//                 <Input id="email" value={examiner.email || ""} disabled className="bg-secondary/50" />
+//               </div>
+
+//               <div className="space-y-2">
+//                 <Label htmlFor="username">Username</Label>
+//                 <Input id="username" value={examiner.username || ""} disabled className="bg-secondary/50" />
+//               </div>
+//             </div>
+
+//             <div className="flex justify-end">
+//               <Button
+//                 type="submit"
+//                 disabled={saving}
+//                 className={`bg-primary hover:bg-primary/90 text-primary-foreground font-semibold ${saving ? "opacity-60 cursor-not-allowed" : ""}`}
+//               >
+//                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+//                 {saving ? "Saving..." : "Save Changes"}
+//               </Button>
+//             </div>
+//           </form>
+//         </CardContent>
+//       </Card>
+//     </motion.div>
+//   );
+// }
+

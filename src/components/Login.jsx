@@ -54,7 +54,7 @@ const AuthPage = () => {
           toast.error("Unable to verify Google email. Try again.");
           return;
         }
-      } catch {}
+      } catch { }
 
       const firebaseUser = await createUser(email, password);
 
@@ -92,20 +92,38 @@ const AuthPage = () => {
 
       const result = await res.json();
 
+      // if (res.ok) {
+      //   toast.success("Login successful!");
+      //   if (role === "student") {
+      //     sessionStorage.setItem("role", "student");
+      //     sessionStorage.setItem("studentId", data.studentId);
+      //     sessionStorage.setItem("studentName", result.user?.name || result.user?.studentId || "Student");
+      //     navigate("/student-dashboard", { replace: true });
+      //   } else if (role === "examiner") {
+      //     sessionStorage.setItem("role", "examiner");
+      //     sessionStorage.setItem("username", data.username);
+      //     sessionStorage.setItem("examinerName", result.user?.name || result.user?.username || "Examiner");
+      //     navigate("/examiner-dashboard", { replace: true });
+      //   }
+      // }
       if (res.ok) {
         toast.success("Login successful!");
+
         if (role === "student") {
           sessionStorage.setItem("role", "student");
-          sessionStorage.setItem("studentId", data.studentId);
-          sessionStorage.setItem("studentName", result.user?.name || result.user?.studentId || "Student");
+          sessionStorage.setItem("studentId", result.user.studentId); // dynamic
+          sessionStorage.setItem("studentName", result.user.name || result.user.studentId);
+          sessionStorage.setItem("studentEmail", result.user.email || ""); // extra
           navigate("/student-dashboard", { replace: true });
         } else if (role === "examiner") {
           sessionStorage.setItem("role", "examiner");
-          sessionStorage.setItem("username", data.username);
-          sessionStorage.setItem("examinerName", result.user?.name || result.user?.username || "Examiner");
+          sessionStorage.setItem("username", result.user.username); // dynamic
+          sessionStorage.setItem("examinerName", result.user.name || result.user.username);
+          sessionStorage.setItem("examinerEmail", result.user.email || ""); // extra
           navigate("/examiner-dashboard", { replace: true });
         }
-      } else {
+      }
+      else {
         toast.error(result.message || "Invalid credentials");
       }
     } catch (err) {
@@ -137,17 +155,15 @@ const AuthPage = () => {
 
           <div className="mt-6 sm:mt-8 flex gap-3 sm:gap-4 flex-wrap justify-center">
             <button
-              className={`px-3 sm:px-4 py-2 font-medium rounded-md ${
-                activeTab === "login" ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-700"
-              }`}
+              className={`px-3 sm:px-4 py-2 font-medium rounded-md ${activeTab === "login" ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-700"
+                }`}
               onClick={() => setActiveTab("login")}
             >
               Login
             </button>
             <button
-              className={`px-3 sm:px-4 py-2 font-medium rounded-md ${
-                activeTab === "register" ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-700"
-              }`}
+              className={`px-3 sm:px-4 py-2 font-medium rounded-md ${activeTab === "register" ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-700"
+                }`}
               onClick={() => setActiveTab("register")}
             >
               Register
@@ -171,22 +187,20 @@ const AuthPage = () => {
                 <div className="flex gap-3 sm:gap-4 justify-center mb-4 flex-wrap">
                   <button
                     type="button"
-                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${
-                      role === "student"
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${role === "student"
                         ? "bg-indigo-500 text-white"
                         : "bg-gray-200 text-gray-700"
-                    }`}
+                      }`}
                     onClick={() => setRole("student")}
                   >
                     Student
                   </button>
                   <button
                     type="button"
-                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${
-                      role === "examiner"
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${role === "examiner"
                         ? "bg-indigo-500 text-white"
                         : "bg-gray-200 text-gray-700"
-                    }`}
+                      }`}
                     onClick={() => setRole("examiner")}
                   >
                     Examiner
@@ -240,22 +254,20 @@ const AuthPage = () => {
                 <div className="flex gap-3 sm:gap-4 justify-center mb-4 flex-wrap">
                   <button
                     type="button"
-                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${
-                      role === "student"
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${role === "student"
                         ? "bg-indigo-500 text-white"
                         : "bg-gray-200 text-gray-700"
-                    }`}
+                      }`}
                     onClick={() => handleRoleChange("student")}
                   >
                     Student
                   </button>
                   <button
                     type="button"
-                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${
-                      role === "examiner"
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${role === "examiner"
                         ? "bg-indigo-500 text-white"
                         : "bg-gray-200 text-gray-700"
-                    }`}
+                      }`}
                     onClick={() => handleRoleChange("examiner")}
                   >
                     Examiner

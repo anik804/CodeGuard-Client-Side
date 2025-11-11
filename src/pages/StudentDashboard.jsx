@@ -1,10 +1,10 @@
-import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { motion } from 'framer-motion';
 
 export function StudentDashboardContent({ onStudentNameChange }) {
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ export function StudentDashboardContent({ onStudentNameChange }) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const examsPerPage = 3;
+  const examsPerPage = 6;
 
   const filteredExams = fakeExams.filter(
     (exam) =>
@@ -199,3 +199,68 @@ export function StudentDashboardContent({ onStudentNameChange }) {
     </div>
   );
 }
+
+
+// import { useEffect, useState } from "react";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { Input } from "@/components/ui/input";
+
+// export const PastExams = ({ studentId }) => {
+//   const [exams, setExams] = useState([]);
+//   const [searchQuery, setSearchQuery] = useState("");
+
+//   useEffect(() => {
+//     fetch(`http://localhost:5000/api/exams/student/${studentId}`)
+//       .then((res) => res.json())
+//       .then((data) => setExams(data))
+//       .catch((err) => console.error(err));
+//   }, [studentId]);
+
+//   const filteredExams = exams.filter(
+//     (exam) =>
+//       exam.course.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//       exam.examiner.toLowerCase().includes(searchQuery.toLowerCase())
+//   );
+
+//   return (
+//     <div>
+//       <Card className="shadow-md">
+//         <CardHeader>
+//           <CardTitle className="text-xl font-semibold">Past Exams</CardTitle>
+//         </CardHeader>
+//         <CardContent>
+//           <Input
+//             placeholder="Search by course or examiner"
+//             value={searchQuery}
+//             onChange={(e) => setSearchQuery(e.target.value)}
+//             className="mb-4"
+//           />
+
+//           {filteredExams.length === 0 ? (
+//             <p>No exams found.</p>
+//           ) : (
+//             <div className="space-y-3 grid grid-cols-2 md:grid-cols-3 gap-4">
+//               {filteredExams.map((exam) => (
+//                 <Card key={exam.id} className="p-3 border shadow-sm h-48">
+//                   <p className="text-sm">
+//                     <strong>Course:</strong> {exam.course}
+//                   </p>
+//                   <p>
+//                     <strong>Examiner:</strong> {exam.examiner}
+//                   </p>
+//                   <p>
+//                     <strong>Date:</strong>{" "}
+//                     {new Date(exam.date).toLocaleDateString()}
+//                   </p>
+//                   <p>
+//                     <strong>Score:</strong> {exam.score}
+//                   </p>
+//                 </Card>
+//               ))}
+//             </div>
+//           )}
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// };
