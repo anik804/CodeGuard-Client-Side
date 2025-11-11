@@ -72,7 +72,7 @@ export default function StudentDashboard2() {
     try {
       setLoadingHistory(true);
       const response = await fetch(
-        `https://codeguard-server-side-1.onrender.com/api/analytics/student/exam-history?studentId=${encodeURIComponent(id)}`
+        `https://codeguard-server-side-walb.onrender.com/api/analytics/student/exam-history?studentId=${encodeURIComponent(id)}`
       );
       const data = await response.json();
       if (data.success) {

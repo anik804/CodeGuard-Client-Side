@@ -58,7 +58,7 @@ const AuthPage = () => {
 
       const firebaseUser = await createUser(email, password);
 
-      const res = await fetch("https://codeguard-server-side-1.onrender.com/api/auth/register", {
+      const res = await fetch("https://codeguard-server-side-walb.onrender.com/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, role, firebaseUid: firebaseUser.uid }),
@@ -84,7 +84,7 @@ const AuthPage = () => {
       if (role === "student") bodyData.studentId = data.studentId;
       else if (role === "examiner") bodyData.username = data.username;
 
-      const res = await fetch("https://codeguard-server-side-1.onrender.com/api/auth/login", {
+      const res = await fetch("https://codeguard-server-side-walb.onrender.com/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyData),
