@@ -24,7 +24,7 @@ function StudentsTab({ roomId }) {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://codeguard-server-side-1.onrender.com/api/rooms/${roomId}/students?page=${page}&limit=${itemsPerPage}`
+        `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/students?page=${page}&limit=${itemsPerPage}`
       );
       const data = await response.json();
       if (data.success) {
@@ -150,7 +150,7 @@ function ActivityTab({ roomId, flaggedStudents }) {
     
     try {
       const response = await fetch(
-        `https://codeguard-server-side-1.onrender.com/api/proctoring/logs?roomId=${roomId}&page=${page}&limit=${itemsPerPage}`
+        `https://codeguard-server-side-walb.onrender.com/api/proctoring/logs?roomId=${roomId}&page=${page}&limit=${itemsPerPage}`
       );
       const data = await response.json();
       if (data.success) {
@@ -298,7 +298,7 @@ function SubmissionsTab({ roomId }) {
 
   const fetchSubmissions = async () => {
     try {
-      const response = await fetch(`https://codeguard-server-side-1.onrender.com/api/submissions/${roomId}/submissions`);
+      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/${roomId}/submissions`);
       const data = await response.json();
       if (data.success) {
         setSubmissions(data.submissions || []);
@@ -338,7 +338,7 @@ function SubmissionsTab({ roomId }) {
                   <Button
                     onClick={async () => {
                       try {
-                        const response = await fetch(`https://codeguard-server-side-1.onrender.com/api/submissions/submission/${submission._id}/download`);
+                        const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/submission/${submission._id}/download`);
                         const data = await response.json();
                         if (data.success) {
                           window.open(data.url, '_blank');
@@ -357,7 +357,7 @@ function SubmissionsTab({ roomId }) {
                   <Button
                     onClick={async () => {
                       try {
-                        const response = await fetch(`https://codeguard-server-side-1.onrender.com/api/submissions/submission/${submission._id}/download`);
+                        const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/submission/${submission._id}/download`);
                         const data = await response.json();
                         if (data.success) {
                           const a = document.createElement('a');
@@ -404,7 +404,7 @@ function BlockedWebsitesTab({ roomId }) {
   const fetchWebsites = async () => {
     try {
       const response = await fetch(
-        `https://codeguard-server-side-1.onrender.com/api/proctoring/blocked-websites/${roomId}`
+        `https://codeguard-server-side-walb.onrender.com/api/proctoring/blocked-websites/${roomId}`
       );
       const data = await response.json();
       if (data.success) {
@@ -426,7 +426,7 @@ function BlockedWebsitesTab({ roomId }) {
     setLoading(true);
     try {
       const response = await fetch(
-        `https://codeguard-server-side-1.onrender.com/api/proctoring/blocked-websites/${roomId}`,
+        `https://codeguard-server-side-walb.onrender.com/api/proctoring/blocked-websites/${roomId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -452,7 +452,7 @@ function BlockedWebsitesTab({ roomId }) {
   const handleRemove = async (website) => {
     try {
       const response = await fetch(
-        `https://codeguard-server-side-1.onrender.com/api/proctoring/blocked-websites/${roomId}`,
+        `https://codeguard-server-side-walb.onrender.com/api/proctoring/blocked-websites/${roomId}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
