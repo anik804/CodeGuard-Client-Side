@@ -46,7 +46,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
     if (!roomId || typeof window === "undefined") return;
 
     // ✅ Connect to signaling server immediately
-    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
+    socketRef.current = io("http://localhost:3000");
     
     // Get student ID from sessionStorage
     const studentId = sessionStorage.getItem('studentId') || 'unknown';
@@ -62,24 +62,69 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
 
     // Listen for exam start - questionUrl is actually the roomId now
     socketRef.current.on("exam-started", ({ questionUrl: roomIdForQuestion }) => {
+      console.log("🎯 ========== EXAM STARTED EVENT RECEIVED ==========");
       console.log("📚 Exam started, room ID for question:", roomIdForQuestion);
+      console.log("🔍 Current roomId:", roomId);
+      console.log("🔍 Window location:", window.location.href);
+      
       // Store roomId as questionUrl (we'll use it to fetch PDF)
       setQuestionUrl(roomIdForQuestion || roomId);
       setExamStartedByExaminer(true);
       toast.success("Exam started! Questions are now available.");
       
       // ✅ Notify extension that exam has actually started (start monitoring now)
-      if (typeof chrome !== 'undefined' && chrome.runtime) {
-        chrome.runtime.sendMessage({
-          type: "EXAM_STARTED"
-        }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.warn("Extension not available:", chrome.runtime.lastError.message);
-          } else {
-            console.log("✅ Extension notified: Exam started - monitoring active");
+      // Send message via window.postMessage to content script (which will forward to background)
+      console.log("📤 Sending EXAM_STARTED message to extension via content script...");
+      console.log("🔍 Message payload:", {
+        target: "CODEGUARD_EXTENSION",
+        message: {
+          type: "EXAM_STARTED",
+          roomId: roomId,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
+      // Send the message
+      window.postMessage({
+        target: "CODEGUARD_EXTENSION",
+        message: {
+          type: "EXAM_STARTED",
+          roomId: roomId,
+          timestamp: new Date().toISOString()
+        }
+      }, window.location.origin);
+      
+      console.log("✅ EXAM_STARTED message posted to window");
+      console.log("🎯 ========== END EXAM STARTED NOTIFICATION ==========");
+      
+      // Listen for response
+      const handleExtensionResponse = (event) => {
+        if (event.origin !== window.location.origin) return;
+        
+        if (event.data && event.data.target === "CODEGUARD_WEB_APP") {
+          console.log("📬 Received response from extension:", event.data);
+          
+          if (event.data.originalType === "EXAM_STARTED") {
+            window.removeEventListener("message", handleExtensionResponse);
+            
+            if (event.data.success) {
+              console.log("✅ Extension confirmed: Monitoring active");
+              toast.success("Monitoring active - Extension ready");
+            } else {
+              console.error("❌ Extension error:", event.data.error);
+              toast.error("Extension error: " + event.data.error);
+            }
           }
-        });
-      }
+        }
+      };
+      
+      window.addEventListener("message", handleExtensionResponse);
+      
+      // Cleanup listener after 10 seconds (increased from 5)
+      setTimeout(() => {
+        window.removeEventListener("message", handleExtensionResponse);
+        console.log("⏱️ Extension response timeout - listener removed");
+      }, 10000);
     });
 
     socketRef.current.on("exam-ended", (data) => {
@@ -87,17 +132,14 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       toast.info(data?.message || "Exam has ended.");
       
       // ✅ Notify extension that exam has ended
-      if (typeof chrome !== 'undefined' && chrome.runtime) {
-        chrome.runtime.sendMessage({
-          type: "END_EXAM"
-        }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.warn("Extension not available:", chrome.runtime.lastError.message);
-          } else {
-            console.log("✅ Extension notified: Exam ended");
-          }
-        });
-      }
+      console.log("📤 Sending END_EXAM message to extension...");
+      window.postMessage({
+        target: "CODEGUARD_EXTENSION",
+        message: {
+          type: "END_EXAM",
+          timestamp: new Date().toISOString()
+        }
+      }, window.location.origin);
       
       // Stop screen sharing and disconnect
       if (streamRef.current) {
@@ -117,17 +159,14 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       toast.success(data.message || "Your leave request has been approved!");
       
       // ✅ Stop monitoring when student leaves
-      if (typeof chrome !== 'undefined' && chrome.runtime) {
-        chrome.runtime.sendMessage({
-          type: "STOP_MONITORING"
-        }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.warn("Extension not available:", chrome.runtime.lastError.message);
-          } else {
-            console.log("✅ Extension notified: Monitoring stopped");
-          }
-        });
-      }
+      console.log("📤 Sending STOP_MONITORING message to extension...");
+      window.postMessage({
+        target: "CODEGUARD_EXTENSION",
+        message: {
+          type: "STOP_MONITORING",
+          timestamp: new Date().toISOString()
+        }
+      }, window.location.origin);
       
       // Student can now leave - redirect after a moment
       setTimeout(() => {
@@ -153,17 +192,14 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       toast.error(data.message || "You have been removed from the exam.");
       
       // ✅ Stop monitoring when student is kicked
-      if (typeof chrome !== 'undefined' && chrome.runtime) {
-        chrome.runtime.sendMessage({
-          type: "STOP_MONITORING"
-        }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.warn("Extension not available:", chrome.runtime.lastError.message);
-          } else {
-            console.log("✅ Extension notified: Monitoring stopped");
-          }
-        });
-      }
+      console.log("📤 Sending STOP_MONITORING message to extension...");
+      window.postMessage({
+        target: "CODEGUARD_EXTENSION",
+        message: {
+          type: "STOP_MONITORING",
+          timestamp: new Date().toISOString()
+        }
+      }, window.location.origin);
       
       setTimeout(() => {
         if (streamRef.current) {
@@ -182,17 +218,14 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
     // Handle force disconnect
     socketRef.current.on("force-disconnect", () => {
       // ✅ Stop monitoring when force disconnected
-      if (typeof chrome !== 'undefined' && chrome.runtime) {
-        chrome.runtime.sendMessage({
-          type: "STOP_MONITORING"
-        }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.warn("Extension not available:", chrome.runtime.lastError.message);
-          } else {
-            console.log("✅ Extension notified: Monitoring stopped");
-          }
-        });
-      }
+      console.log("📤 Sending STOP_MONITORING message to extension...");
+      window.postMessage({
+        target: "CODEGUARD_EXTENSION",
+        message: {
+          type: "STOP_MONITORING",
+          timestamp: new Date().toISOString()
+        }
+      }, window.location.origin);
       
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
@@ -206,6 +239,24 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       setExamStarted(false);
       socketRef.current?.disconnect();
       toast.error("You have been disconnected from the exam.");
+    });
+
+    // ✅ Listen for whitelist updates from examiner
+    socketRef.current.on("whitelist-updated", (data) => {
+      console.log("📢 Whitelist updated:", data);
+      toast.info(`Whitelist updated: ${data.website} was ${data.action}`);
+      
+      // Notify extension to refresh whitelist immediately
+      window.postMessage({
+        target: "CODEGUARD_EXTENSION",
+        message: {
+          type: "REFRESH_WHITELIST",
+          roomId: roomId,
+          action: data.action,
+          website: data.website,
+          timestamp: new Date().toISOString()
+        }
+      }, window.location.origin);
     });
 
     // ✅ Handle examiner signal for WebRTC
@@ -284,7 +335,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
   // ✅ validate room again before starting screen share (extra safety)
   // const validateRoom = async () => {
   //   try {
-  //     const response = await axios.post("https://codeguard-server-side-walb.onrender.com/api/rooms/validate", {
+  //     const response = await axios.post("http://localhost:3000/api/rooms/validate", {
   //       roomId,
   //       password: "", // optional if already validated before joining
   //     });
@@ -391,7 +442,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-                        const proxyUrl = `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question/download`;
+                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
                         
                         const loadingToast = toast.loading("Preparing PDF view...");
                         const headers = {};
@@ -445,7 +496,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-                        const proxyUrl = `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question/download`;
+                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
                         
                         const loadingToast = toast.loading("Preparing PDF download...");
                         const headers = {};
@@ -670,7 +721,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
 
                         try {
                           const response = await axios.post(
-                            `https://codeguard-server-side-walb.onrender.com/api/submissions/${roomId}/submit`,
+                            `http://localhost:3000/api/submissions/${roomId}/submit`,
                             formData,
                             {
                               headers: {

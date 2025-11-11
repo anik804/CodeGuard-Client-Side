@@ -104,7 +104,7 @@ export default function Dashboard() {
       }
 
       const response = await fetch(
-        `https://codeguard-server-side-walb.onrender.com/api/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
+        `http://localhost:3000/api/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
       );
       
       if (!response.ok) {
@@ -136,8 +136,8 @@ export default function Dashboard() {
         if (!username) return;
 
         const [studentsPerExamRes, roomsCreatedRes] = await Promise.all([
-          fetch(`https://codeguard-server-side-walb.onrender.com/api/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
-          fetch(`https://codeguard-server-side-walb.onrender.com/api/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
+          fetch(`http://localhost:3000/api/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
+          fetch(`http://localhost:3000/api/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
         ]);
 
         const studentsPerExamData = await studentsPerExamRes.json();
@@ -315,8 +315,8 @@ export default function Dashboard() {
                 try {
                   setLoadingExaminerAnalytics(true);
                   const [studentsPerExamRes, roomsCreatedRes] = await Promise.all([
-                    fetch(`https://codeguard-server-side-walb.onrender.com/api/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
-                    fetch(`https://codeguard-server-side-walb.onrender.com/api/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
+                    fetch(`http://localhost:3000/api/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
+                    fetch(`http://localhost:3000/api/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
                   ]);
 
                   const studentsPerExamData = await studentsPerExamRes.json();
