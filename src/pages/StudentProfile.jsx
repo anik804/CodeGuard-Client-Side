@@ -39,7 +39,7 @@ export default function StudentProfile() {
   const fetchStudentInfo = async (studentId) => {
     try {
       const res = await axios.get(
-        `http://localhost:3000/api/students/${studentId}`
+        `https://codeguard-server-side-walb.onrender.com/api/students/${studentId}`
       );
       setStudent(res.data);
     } catch (err) {
