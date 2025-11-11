@@ -1,5 +1,5 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
+const API_BASE_URL =  "https://codeguard-server-side-walb.onrender.com";
+// import.meta.env.VITE_API_URL ||
 export const api = {
   // Analytics endpoints
   getAnalytics: async () => {
