@@ -21,7 +21,9 @@ export default function StudentProfile() {
 
   const fetchStudentInfo = async (studentId) => {
     try {
-      const res = await axios.get(`http://localhost:3000/api/students/${studentId}`);
+      const res = await axios.get(
+        `http://localhost:3000/api/students/${studentId}`
+      );
       setStudent(res.data);
     } catch (err) {
       console.error(err);
