@@ -356,7 +356,7 @@ export default function MonitoringDashboardPage() {
   const showBackButton = !examStarted || examEnded;
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header with Back Button */}
       {showBackButton && (
         <motion.div
