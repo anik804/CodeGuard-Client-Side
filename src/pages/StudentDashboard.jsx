@@ -35,7 +35,7 @@ export function StudentDashboardContent({ onStudentNameChange }) {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const examsPerPage = 3;
+  const examsPerPage = 6;
 
   const filteredExams = fakeExams.filter(
     (exam) =>
@@ -60,7 +60,7 @@ export function StudentDashboardContent({ onStudentNameChange }) {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:3000/api/rooms/validate', {
+      const response = await fetch('https://codeguard-server-side-1.onrender.com/api/rooms/validate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
