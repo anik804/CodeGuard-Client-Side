@@ -19,7 +19,7 @@ export default function AboutUs() {
     {
       icon: ShieldCheck,
       title: "AI & Website Blocking",
-      desc: "Automatically . restricts access to sites like ChatGPT or other AI tools during the exam.",
+      desc: "Automatically  restricts access to sites like ChatGPT or other AI tools during the exam.",
       gradient: "from-amber-100 via-orange-100 to-red-100",
     },
   ];
