@@ -65,7 +65,7 @@ export default function ExamForm({ mode = "create" }) {
       const username = sessionStorage.getItem("username");
       const examinerName = sessionStorage.getItem("examinerName");
       
-      const response = await axios.post('https://codeguard-server-side-1.onrender.com/api/rooms', {
+      const response = await axios.post('http://localhost:3000/rooms', {
         roomId: roomId.replace(/\s+/g, '-').toLowerCase(),
         password: roomPassword,
         examName: examName,
@@ -370,7 +370,7 @@ export default function ExamForm({ mode = "create" }) {
 //       const username = sessionStorage.getItem("username");
 //       const examinerName = sessionStorage.getItem("examinerName");
       
-//       const response = await axios.post('https://codeguard-server-side-1.onrender.com/api/rooms', {
+//       const response = await axios.post('http://localhost:3000/rooms', {
 //         roomId: roomId.replace(/\s+/g, '-').toLowerCase(),
 //         password: roomPassword,
 //         examName: examName,

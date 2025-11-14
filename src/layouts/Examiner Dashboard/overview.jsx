@@ -109,7 +109,7 @@ export default function Dashboard() {
 
         console.log("🔍 Fetching rooms for examiner:", username);
         const response = await fetch(
-          `https://codeguard-server-side-1.onrender.com/api/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
+          `http://localhost:3000/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
         );
         
         if (!response.ok) {

@@ -81,7 +81,7 @@ const ContactUs = () => {
   return (
     <section
       id="contact"
-      className="relative py-24 bg-black text-gray-200 overflow-hidden"
+      className="relative py-24 container mx-auto text-gray-200 overflow-hidden"
     >
       {/* Animated Background Glows */}
       <motion.div

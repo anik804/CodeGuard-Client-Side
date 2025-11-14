@@ -38,7 +38,7 @@ export function ExaminerDashboardContent({ username }) {
 
     setIsLoading(true);
     try {
-      const response = await axios.post('https://codeguard-server-side-1.onrender.com/api/rooms', {
+      const response = await axios.post('http://localhost:3000/rooms', {
         roomId: roomId,
         password: roomPassword,
         courseName: examName,
