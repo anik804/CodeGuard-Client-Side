@@ -8,7 +8,7 @@ export function ActivityLog({
   isOpen, 
   onClose, 
   roomId,
-  flaggedStudents 
+  flaggedStudents = new Set(), 
 }) {
   const [logs, setLogs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);

@@ -5,9 +5,9 @@ import { Button } from "../ui/button";
 import { Pagination } from "./Pagination";
 
 export function StudentVideoGrid({ 
-  peers, 
-  students, 
-  flaggedStudents, 
+  peers = [],
+  students = [],
+  flaggedStudents = new Set(), 
   sidebarOpen, 
   activityLogOpen,
   onToggleSidebar,
