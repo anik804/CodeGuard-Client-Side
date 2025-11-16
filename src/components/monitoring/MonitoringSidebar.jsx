@@ -556,7 +556,7 @@ function BlockedWebsitesTab({ roomId }) {
   );
 }
 
-export function MonitoringSidebar({ roomId, flaggedStudents, isOpen, onClose }) {
+export function MonitoringSidebar({ roomId, flaggedStudents = new Set(), isOpen, onClose }) {
   return (
     <AnimatePresence>
       {isOpen && (

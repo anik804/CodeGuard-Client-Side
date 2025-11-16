@@ -6,7 +6,7 @@ import io from "socket.io-client";
 import { toast } from "sonner";
 import { useWebRTC } from "../hooks/useWebRTC";
 import { formatTime } from "../utils/timeFormatter";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
