@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Users, AlertTriangle, X, Plus, FileText, Eye, FileDown } from "lucide-react";
 import { Button } from "../ui/button";
