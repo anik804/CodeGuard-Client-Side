@@ -72,7 +72,7 @@ const ContactUs = () => {
     {
       icon: MapPin,
       title: "Office",
-      detail: "123 IIUC, Chittagong, Bangladesh",
+      detail: "Hi hello Bangladesh",
       link: "#",
       gradient: "from-amber-500 to-orange-500",
     },
