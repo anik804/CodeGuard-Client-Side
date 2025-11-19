@@ -17,10 +17,10 @@ const AnimatedBadge = ({
   };
 
   const variantClasses = {
-    default: "bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800",
-    gradient: "bg-gradient-to-r from-indigo-500 to-purple-500 text-white border-transparent shadow-lg",
-    outline: "bg-white/10 border-white/20 text-white",
-    glow: "bg-indigo-500/20 border-indigo-400/50 text-indigo-300 shadow-lg shadow-indigo-500/50"
+    default: "bg-gray-100 text-gray-900 border-gray-200",
+    gradient: "bg-gradient-to-r from-black via-gray-900 to-gray-700 text-white border-transparent shadow-lg",
+    outline: "bg-transparent border-white/30 text-white",
+    glow: "bg-black/40 border-white/20 text-white shadow-lg shadow-black/40"
   };
 
   return (

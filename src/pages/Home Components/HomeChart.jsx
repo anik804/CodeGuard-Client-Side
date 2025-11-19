@@ -365,7 +365,10 @@ const HomeChart = () => {
   const doughnutChartOptions = { ...chartOptions, cutout: "65%" };
 
   return (
-    <section className="py-20 px-6 bg-gradient-to-b from-background to-muted/20">
+    <section
+      id="insight-section"
+      className="py-20 px-6 bg-gradient-to-b from-background to-muted/20"
+    >
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
