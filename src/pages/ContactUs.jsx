@@ -72,7 +72,7 @@ const ContactUs = () => {
     {
       icon: MapPin,
       title: "Office",
-      detail: "123 IIUC, Chittagong, Bangladesh",
+      detail: "Hi hello Bangladesh",
       link: "#",
       gradient: "from-amber-500 to-orange-500",
     },
@@ -81,7 +81,7 @@ const ContactUs = () => {
   return (
     <section
       id="contact"
-      className="relative py-24 bg-black text-gray-200 overflow-hidden"
+      className="relative py-24 container mx-auto text-gray-200 overflow-hidden"
     >
       {/* Animated Background Glows */}
       <motion.div

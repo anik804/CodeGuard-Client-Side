@@ -22,7 +22,7 @@ function LayoutContent({ children }) {
 
   const fetchStudentInfo = async (studentId) => {
     try {
-      const res = await axios.get(`https://codeguard-server-side-walb.onrender.com/api/students/${studentId}`);
+      const res = await axios.get(`http://localhost:3000/students/${studentId}`);
       setStudent(res.data);
     } catch (err) {
       console.error("❌ Failed to fetch student info:", err);

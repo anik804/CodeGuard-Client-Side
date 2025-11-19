@@ -250,7 +250,7 @@ export default function Profile() {
 // //   useEffect(() => {
 // //   const fetchExaminer = async () => {
 // //     try {
-// //       const res = await axios.get(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`);
+// //       const res = await axios.get(`http://localhost:3000/examiners/${username}`);
 // //       setExaminer(res.data);
 // //     } catch (error) {
 // //       console.error("Failed to fetch examiner:", error);
@@ -267,7 +267,7 @@ export default function Profile() {
 //     return;
 //   }
 
-//   axios.get(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`)
+//   axios.get(`http://localhost:3000/examiners/${username}`)
 //     .then(res => setExaminer(res.data))
 //     .catch(err => console.error(err));
 // }, [username]);
@@ -277,7 +277,7 @@ export default function Profile() {
 
 //   const fetchExaminer = async () => {
 //     try {
-//       const res = await axios.get(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`);
+//       const res = await axios.get(`http://localhost:3000/examiners/${username}`);
 //       setExaminer(res.data);
 //     } catch (error) {
 //       console.error("Failed to fetch examiner:", error);
@@ -291,7 +291,7 @@ export default function Profile() {
 //     e.preventDefault();
 //     setSaving(true);
 //     try {
-//       await axios.put(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`, {
+//       await axios.put(`http://localhost:3000/examiners/${username}`, {
 //         name: examiner.name,
 //         email: examiner.email,
 //         role: examiner.role,
@@ -427,7 +427,7 @@ export default function Profile() {
 //   if (!username) return; // যদি login না করা থাকে
 //   const fetchExaminer = async () => {
 //     try {
-//       const res = await axios.get(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`);
+//       const res = await axios.get(`http://localhost:3000/examiners/${username}`);
 //       setExaminer(res.data);
 //     } catch (err) {
 //       console.error("Failed to fetch examiner:", err);
@@ -444,7 +444,7 @@ export default function Profile() {
 //   //   e.preventDefault();
 //   //   setSaving(true);
 //   //   try {
-//   //     await axios.put(`https://codeguard-server-side-1.onrender.com/api/examiners/${email}`, {
+//   //     await axios.put(`http://localhost:3000/examiners/${email}`, {
 //   //       name: examiner.name,
 //   //       role: examiner.role,
 //   //     });
@@ -461,7 +461,7 @@ export default function Profile() {
 //   e.preventDefault();
 //   setSaving(true);
 //   try {
-//     await axios.put(`https://codeguard-server-side-1.onrender.com/api/examiners/${username}`, {
+//     await axios.put(`http://localhost:3000/examiners/${username}`, {
 //       name: examiner.name,
 //       email: examiner.email,
 //       role: examiner.role,

@@ -104,7 +104,7 @@ export default function Dashboard() {
       }
 
       const response = await fetch(
-        `https://codeguard-server-side-walb.onrender.com/api/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
+        `http://localhost:3000/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
       );
       
       if (!response.ok) {
@@ -129,38 +129,35 @@ export default function Dashboard() {
   }, []);
 
   // Fetch examiner-specific analytics
-  const fetchExaminerAnalytics = async () => {
-    try {
-      const username = sessionStorage.getItem("username");
-      if (!username) return;
+  useEffect(() => {
+    const fetchExaminerAnalytics = async () => {
+      try {
+        const username = sessionStorage.getItem("username");
+        if (!username) return;
 
-      setLoadingExaminerAnalytics(true);
+        const [studentsPerExamRes, roomsCreatedRes] = await Promise.all([
+          fetch(`http://localhost:3000/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
+          fetch(`http://localhost:3000/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
+        ]);
 
-      const [studentsPerExamRes, roomsCreatedRes] = await Promise.all([
-        fetch(
-          `https://codeguard-server-side-walb.onrender.com/api/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(
-            username
-          )}`
-        ),
-        fetch(
-          `https://codeguard-server-side-walb.onrender.com/api/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(
-            username
-          )}`
-        ),
-      ]);
+        const studentsPerExamData = await studentsPerExamRes.json();
+        const roomsCreatedData = await roomsCreatedRes.json();
 
-      // If either endpoint is missing or returns an error, fall back gracefully
-      if (!studentsPerExamRes.ok || !roomsCreatedRes.ok) {
-        console.error(
-          "Failed to fetch examiner analytics:",
-          studentsPerExamRes.status,
-          roomsCreatedRes.status
-        );
-        setExaminerAnalytics({
-          studentsPerExam: [],
-          roomsCreated: {},
-        });
-        return;
+        if (studentsPerExamData.success && roomsCreatedData.success) {
+          setExaminerAnalytics({
+            studentsPerExam: Array.isArray(studentsPerExamData.data) ? studentsPerExamData.data : [],
+            roomsCreated: roomsCreatedData.data || {},
+          });
+        } else {
+          setExaminerAnalytics({
+            studentsPerExam: [],
+            roomsCreated: {},
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch examiner analytics:", error);
+      } finally {
+        setLoadingExaminerAnalytics(false);
       }
 
       const studentsPerExamData = await studentsPerExamRes.json();
@@ -341,7 +338,33 @@ export default function Dashboard() {
           onClick={() => {
             fetchAnalytics();
             fetchExaminerRooms();
-            fetchExaminerAnalytics();
+            const username = sessionStorage.getItem("username");
+            if (username) {
+              const fetchExaminerAnalytics = async () => {
+                try {
+                  setLoadingExaminerAnalytics(true);
+                  const [studentsPerExamRes, roomsCreatedRes] = await Promise.all([
+                    fetch(`http://localhost:3000/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
+                    fetch(`http://localhost:3000/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
+                  ]);
+
+                  const studentsPerExamData = await studentsPerExamRes.json();
+                  const roomsCreatedData = await roomsCreatedRes.json();
+
+                  if (studentsPerExamData.success && roomsCreatedData.success) {
+                    setExaminerAnalytics({
+                      studentsPerExam: studentsPerExamData.data,
+                      roomsCreated: roomsCreatedData.data
+                    });
+                  }
+                } catch (error) {
+                  console.error("Failed to fetch examiner analytics:", error);
+                } finally {
+                  setLoadingExaminerAnalytics(false);
+                }
+              };
+              fetchExaminerAnalytics();
+            }
           }}
           disabled={loading || loadingExaminerAnalytics}
           className="mt-4 md:mt-0 px-4 py-2 bg-white/50 text-gray-800 rounded-lg hover:bg-white/70 transition-colors flex items-center gap-2"
