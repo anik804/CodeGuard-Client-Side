@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 const GradientText = ({ 
   children, 
   className = "", 
-  gradient = "from-indigo-600 via-purple-600 to-pink-600",
+  gradient = "from-white via-gray-200 to-white",
   animate = true,
   size = "text-4xl"
 }) => {

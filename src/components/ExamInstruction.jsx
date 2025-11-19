@@ -335,7 +335,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
   // ✅ validate room again before starting screen share (extra safety)
   // const validateRoom = async () => {
   //   try {
-  //     const response = await axios.post("http://localhost:3000/rooms/validate", {
+  //     const response = await axios.post("http://localhost:3000/api/rooms/validate", {
   //       roomId,
   //       password: "", // optional if already validated before joining
   //     });
@@ -442,7 +442,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-                        const proxyUrl = `http://localhost:3000/rooms/${roomId}/question/download`;
+                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
                         
                         const loadingToast = toast.loading("Preparing PDF view...");
                         const headers = {};
@@ -496,7 +496,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-                        const proxyUrl = `http://localhost:3000/rooms/${roomId}/question/download`;
+                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
                         
                         const loadingToast = toast.loading("Preparing PDF download...");
                         const headers = {};
@@ -721,7 +721,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
 
                         try {
                           const response = await axios.post(
-                            `http://localhost:3000/submissions/${roomId}/submit`,
+                            `http://localhost:3000/api/submissions/${roomId}/submit`,
                             formData,
                             {
                               headers: {

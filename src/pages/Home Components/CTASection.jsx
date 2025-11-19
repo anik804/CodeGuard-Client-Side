@@ -21,6 +21,7 @@ const CTASection = () => {
 
   return (
     <section
+      id="cta"
       className="relative py-32 overflow-hidden"
       style={{
         backgroundImage: `url('https://i.ibb.co.com/3yVwv2Rd/robert-bye-Cyv-K-Z2p-YXg-unsplash.jpg')`,
