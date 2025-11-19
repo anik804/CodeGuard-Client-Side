@@ -159,8 +159,32 @@ export default function Dashboard() {
       } finally {
         setLoadingExaminerAnalytics(false);
       }
-    };
 
+      const studentsPerExamData = await studentsPerExamRes.json();
+      const roomsCreatedData = await roomsCreatedRes.json();
+
+      if (studentsPerExamData.success && roomsCreatedData.success) {
+        setExaminerAnalytics({
+          studentsPerExam: Array.isArray(studentsPerExamData.data)
+            ? studentsPerExamData.data
+            : [],
+          roomsCreated: roomsCreatedData.data || {},
+        });
+      } else {
+        setExaminerAnalytics({
+          studentsPerExam: [],
+          roomsCreated: {},
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch examiner analytics:", error);
+      setExaminerAnalytics((prev) => prev || { studentsPerExam: [], roomsCreated: {} });
+    } finally {
+      setLoadingExaminerAnalytics(false);
+    }
+  };
+
+  useEffect(() => {
     fetchExaminerAnalytics();
   }, []);
 

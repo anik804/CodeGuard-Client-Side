@@ -7,10 +7,12 @@ if (typeof global === "undefined") {
   window.global = window;
 }
 
+const MAX_RETRIES_PER_PEER = 3;
+
 export function useWebRTC(socketRef, setPeers, setStudents) {
   const peersRef = useRef([]);
 
-  const createPeerConnectionForStudent = (socketId, studentInfo) => {
+  const createPeerConnectionForStudent = (socketId, studentInfo, retryCount = 0) => {
     // Check if peer already exists
     const existingPeer = peersRef.current.find((p) => p.peerId === socketId);
     if (existingPeer) {
@@ -18,7 +20,9 @@ export function useWebRTC(socketRef, setPeers, setStudents) {
       return;
     }
 
-    console.log("Creating peer connection for student:", socketId);
+    console.log(
+      `Creating peer connection for student: ${socketId} (retry ${retryCount}/${MAX_RETRIES_PER_PEER})`
+    );
     
     // Create new peer connection
     const peer = new Peer({
@@ -69,14 +73,51 @@ export function useWebRTC(socketRef, setPeers, setStudents) {
 
     peer.on("error", (err) => {
       console.error("❌ Peer error:", err);
-      toast.error(`Connection error with ${studentInfo.name}`);
+
+      const peerItem = peersRef.current.find((p) => p.peerId === socketId);
+      const currentRetry = peerItem?.retryCount ?? retryCount;
+
+      // Handle connection failed with limited automatic retries
+      if (
+        err?.message?.toLowerCase().includes("connection failed") &&
+        currentRetry < MAX_RETRIES_PER_PEER
+      ) {
+        console.warn(
+          `Peer connection failed for ${socketId}. Retrying (${currentRetry + 1}/${MAX_RETRIES_PER_PEER})...`
+        );
+
+        // Clean up current peer
+        try {
+          peer.destroy();
+        } catch {}
+
+        peersRef.current = peersRef.current.filter((p) => p.peerId !== socketId);
+        setPeers([...peersRef.current]);
+
+        // Retry after a short delay
+        setTimeout(() => {
+          createPeerConnectionForStudent(socketId, studentInfo, currentRetry + 1);
+        }, 1000);
+
+        return;
+      }
+
+      // Give a clear message after retries are exhausted or for other errors
+      if (currentRetry >= MAX_RETRIES_PER_PEER) {
+        toast.error(
+          `Unable to establish connection with ${studentInfo.name}. Please check their network or retry later.`
+        );
+      } else {
+        toast.error(`Connection error with ${studentInfo.name}`);
+      }
     });
 
-    const peerItem = { 
-      peerId: socketId, 
-      peer, 
+    const peerItem = {
+      peerId: socketId,
+      peer,
       stream: null,
-      studentInfo: studentInfo
+      studentInfo: studentInfo,
+      retryCount,
     };
     
     // Check if peer already exists before adding

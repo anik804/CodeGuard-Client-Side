@@ -2,6 +2,7 @@ import { Upload, FileText, Clock, Users, AlertTriangle } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { formatTime } from "../../utils/timeFormatter";
+import logo from "../../assets/logo.png";
 
 export function MonitoringHeader({
   roomId,
@@ -28,7 +29,7 @@ export function MonitoringHeader({
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg flex-shrink-0">
-                <img src="/src/assets/logo.png" alt="CodeGuard Logo" className="h-7 w-7" />
+                <img src={logo} alt="CodeGuard Logo" className="h-7 w-7" />
               </div>
               <div className="flex-1 min-w-0">
                 <h1 className="text-lg md:text-xl font-bold gradient-text truncate">
