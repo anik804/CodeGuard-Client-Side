@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import logo from "../assets/logo.png";
 
 const sectionLinks = [
-    { label: "Home", path: "/" },
     { label: "How it Works", id: "how-it-works" },
     { label: "Features", id: "features" },
      { label: "Insight", id: "insight-section" },
@@ -14,7 +13,8 @@ const sectionLinks = [
 ];
 
 const pageLinks = [
-    
+    { label: "Home", path: "/" },
+
     { label: "About", path: "/about-us" },
     { label: "Contact", path: "/contact-us" },
 ];
@@ -27,7 +27,11 @@ const Navbar = () => {
     const [activeSection, setActiveSection] = useState("hero");
 
     const isHome = location.pathname === "/";
-    const navItems = isHome ? [...sectionLinks, ...pageLinks] : pageLinks;
+    // const navItems = isHome ? [...sectionLinks, ...pageLinks] : pageLinks;
+    const navItems = isHome 
+    ? [...pageLinks, ...sectionLinks]
+    : pageLinks;
+
 
     useEffect(() => {
         const handleScroll = () => setIsScrolled(window.scrollY > 30);
