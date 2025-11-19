@@ -384,7 +384,7 @@ export default function StudentDashboard2() {
 
       {/* Charts */}
       <div className="grid mt-10 grid-cols-1 lg:grid-cols-2 gap-8">
-        {flagsPerExamData.labels.length > 0 && (
+        {Array.isArray(flagsPerExamData.labels) && flagsPerExamData.labels.length > 0 && (
           <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
             <h3 className="text-lg font-semibold text-center mb-3 text-red-600">
               Flags Received Per Exam
@@ -395,7 +395,7 @@ export default function StudentDashboard2() {
           </div>
         )}
 
-        {monthlyStatsData.labels.length > 0 && (
+        {Array.isArray(monthlyStatsData.labels) && monthlyStatsData.labels.length > 0 && (
           <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
             <h3 className="text-lg font-semibold text-center mb-3 text-purple-600">
               Monthly Statistics
@@ -406,7 +406,7 @@ export default function StudentDashboard2() {
           </div>
         )}
 
-        {recentExamsData.labels.length > 0 && (
+        {Array.isArray(recentExamsData.labels) && recentExamsData.labels.length > 0 && (
           <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
             <h3 className="text-lg font-semibold text-center mb-3 text-indigo-600">
               Flags in Recent Exams
@@ -417,7 +417,7 @@ export default function StudentDashboard2() {
           </div>
         )}
 
-        {examStatusData.labels.length > 0 && (
+        {Array.isArray(examStatusData.labels) && examStatusData.labels.length > 0 && (
           <div className="bg-white shadow-md rounded-xl p-4 border border-gray-100">
             <h3 className="text-lg font-semibold text-center mb-3 text-orange-600">
               Exam Status Distribution
@@ -479,7 +479,7 @@ export default function StudentDashboard2() {
           </div>
 
           {/* Exams by Examiner Chart */}
-          {examHistory.byExaminer.length > 0 && (
+          {Array.isArray(examHistory.byExaminer) && examHistory.byExaminer.length > 0 && (
             <Card className="glass-card shadow-md">
               <div className="p-4 border-b border-gray-100">
                 <h3 className="text-lg font-semibold text-indigo-600">
@@ -512,7 +512,7 @@ export default function StudentDashboard2() {
           )}
 
           {/* Recent Exams List */}
-          {examHistory.examHistory.length > 0 && (
+          {Array.isArray(examHistory.examHistory) && examHistory.examHistory.length > 0 && (
             <Card className="glass-card shadow-md">
               <div className="p-4 border-b border-gray-100">
                 <h3 className="text-lg font-semibold text-gray-800">Recent Exam History</h3>

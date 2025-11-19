@@ -145,8 +145,13 @@ export default function Dashboard() {
 
         if (studentsPerExamData.success && roomsCreatedData.success) {
           setExaminerAnalytics({
-            studentsPerExam: studentsPerExamData.data,
-            roomsCreated: roomsCreatedData.data
+            studentsPerExam: Array.isArray(studentsPerExamData.data) ? studentsPerExamData.data : [],
+            roomsCreated: roomsCreatedData.data || {},
+          });
+        } else {
+          setExaminerAnalytics({
+            studentsPerExam: [],
+            roomsCreated: {},
           });
         }
       } catch (error) {
@@ -589,7 +594,10 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Examiner Analytics Section - Students Per Exam Chart */}
-      {examinerAnalytics && !loadingExaminerAnalytics && examinerAnalytics.studentsPerExam.length > 0 && (
+      {examinerAnalytics &&
+        !loadingExaminerAnalytics &&
+        Array.isArray(examinerAnalytics.studentsPerExam) &&
+        examinerAnalytics.studentsPerExam.length > 0 && (
         <motion.div 
           variants={itemVariants} 
           initial="hidden" 

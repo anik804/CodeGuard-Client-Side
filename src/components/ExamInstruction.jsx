@@ -46,7 +46,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
     if (!roomId || typeof window === "undefined") return;
 
     // ✅ Connect to signaling server immediately
-    socketRef.current = io("http://localhost:3000");
+    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
     
     // Get student ID from sessionStorage
     const studentId = sessionStorage.getItem('studentId') || 'unknown';
