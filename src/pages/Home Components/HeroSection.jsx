@@ -9,12 +9,12 @@ import {
   AnimatedBadge,
   StaggerContainer,
   StaggerItem,
-  GlowEffect,
 } from "../../components/react-bits";
 
 const HeroSection = () => {
   return (
     <section
+      id="hero"
       className="relative w-full min-h-screen flex items-center justify-center text-center overflow-hidden"
       style={{
         backgroundImage: `url('https://i.ibb.co/TxBhXYq4/c1-DYNu0y-B7.webp')`,
@@ -25,24 +25,23 @@ const HeroSection = () => {
       {/* React Bits: Gradient Background */}
       <GradientBackground
         gradients={[
-          "from-indigo-900/80 via-purple-900/70 to-pink-900/80",
-          "from-blue-900/60 via-cyan-900/60 to-teal-900/60",
+          "from-black/85 via-black/90 to-black/85",
+          "from-gray-900/60 via-gray-800/60 to-black/60",
         ]}
         animate={true}
       />
-      <div className="absolute inset-0 bg-black/40 z-0"></div>
+      <div className="absolute inset-0 bg-black/65 z-0"></div>
 
       {/* React Bits: Particle Background */}
       <ParticleBackground
-        count={80}
+        count={70}
         colors={[
-          "rgba(99, 102, 241, 0.5)",
-          "rgba(236, 72, 153, 0.5)",
-          "rgba(147, 51, 234, 0.5)",
-          "rgba(59, 130, 246, 0.4)",
+          "rgba(255,255,255,0.35)",
+          "rgba(200,200,200,0.25)",
+          "rgba(160,160,160,0.2)",
         ]}
-        sizeRange={[3, 8]}
-        speedRange={[15, 50]}
+        sizeRange={[2, 6]}
+        speedRange={[15, 45]}
       />
 
       {/* React Bits: Stagger Container */}
@@ -76,7 +75,7 @@ const HeroSection = () => {
             </div>
             <div className="block">
               <GradientText
-                gradient="from-indigo-300 via-purple-300 to-pink-300"
+                gradient="from-white via-gray-200 to-white"
                 size="text-5xl sm:text-6xl md:text-7xl lg:text-6xl"
                 animate={true}
               >
@@ -89,26 +88,21 @@ const HeroSection = () => {
         {/* React Bits: Animated Text Subtitle */}
         <StaggerItem variant="fadeUp" className="mb-12">
           <AnimatedText
-            text="A next-gen screen monitoring solution for online exams. Share your screen in real-time, prevent cheating, and ensure a fair, transparent testing environment."
+            text="Precision-built screen monitoring for serious, secure assessments. Capture every screen, surface anomalies, and keep your sessions fair and transparent."
             type="word"
             delay={0.6}
             stagger={0.05}
-            className="text-lg sm:text-xl md:text-2xl font-medium text-white/90 max-w-3xl mx-auto leading-relaxed"
+            className="text-lg sm:text-xl md:text-2xl font-medium text-white/80 max-w-3xl mx-auto leading-relaxed"
           />
         </StaggerItem>
 
         {/* React Bits: Animated Buttons */}
         <StaggerItem variant="fadeUp" className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          <GlowEffect color="indigo" intensity="high">
-            <AnimatedButton
-              variant="gradient"
-              size="lg"
-              iconPosition="right"
-            >
-              Get Started
-            </AnimatedButton>
-          </GlowEffect>
-          <AnimatedButton variant="secondary" size="lg">
+          <AnimatedButton variant="primary" size="lg">
+            Get Started
+          </AnimatedButton>
+          <AnimatedButton variant="primary" size="lg">
+
             Learn More
           </AnimatedButton>
         </StaggerItem>

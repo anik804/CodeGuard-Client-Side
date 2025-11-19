@@ -20,10 +20,10 @@ const AnimatedButton = ({
   };
 
   const variantClasses = {
-    primary: "bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg hover:shadow-xl",
-    secondary: "bg-white/10 backdrop-blur-md border-2 border-white/20 text-white hover:bg-white/20",
-    gradient: "bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white shadow-2xl hover:shadow-indigo-500/50",
-    outline: "border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white"
+    primary: "bg-black text-white hover:bg-gray-900 shadow-lg hover:shadow-xl",
+    secondary: "bg-white text-gray-900 border border-black/10 hover:bg-gray-100",
+    gradient: "bg-gradient-to-r from-black via-gray-800 to-gray-700 text-white shadow-2xl hover:shadow-black/50",
+    outline: "border-2 border-black text-black hover:bg-black hover:text-white"
   };
 
   const IconComponent = icon || (variant === "primary" || variant === "gradient" ? ArrowRight : null);
@@ -57,7 +57,7 @@ const AnimatedButton = ({
       </span>
       {(variant === "primary" || variant === "gradient") && (
         <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 opacity-0 hover:opacity-100 transition-opacity"
+          className="absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-transparent opacity-0 hover:opacity-100 transition-opacity"
           initial={false}
         />
       )}

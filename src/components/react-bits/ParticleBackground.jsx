@@ -3,7 +3,7 @@ import { useMemo } from "react";
 
 const ParticleBackground = ({ 
   count = 50,
-  colors = ["rgba(99, 102, 241, 0.4)", "rgba(236, 72, 153, 0.4)", "rgba(147, 51, 234, 0.4)"],
+  colors = ["rgba(255,255,255,0.35)", "rgba(200,200,200,0.3)", "rgba(160,160,160,0.25)"],
   sizeRange = [2, 6],
   speedRange = [20, 60]
 }) => {

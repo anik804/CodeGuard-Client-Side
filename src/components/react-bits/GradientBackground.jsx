@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 
 const GradientBackground = ({ 
   gradients = [
-    "from-indigo-500/20 via-purple-500/20 to-pink-500/20",
-    "from-blue-500/20 via-cyan-500/20 to-teal-500/20"
+    "from-black/70 via-gray-900/60 to-black/70",
+    "from-gray-900/40 via-gray-800/40 to-black/40"
   ],
   animate = true,
   className = ""

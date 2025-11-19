@@ -104,7 +104,7 @@ export default function Dashboard() {
       }
 
       const response = await fetch(
-        `http://localhost:3000/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
+        `http://localhost:3000/api/api/rooms/by-examiner?examinerUsername=${encodeURIComponent(username)}`
       );
       
       if (!response.ok) {
@@ -129,35 +129,38 @@ export default function Dashboard() {
   }, []);
 
   // Fetch examiner-specific analytics
-  useEffect(() => {
-    const fetchExaminerAnalytics = async () => {
-      try {
-        const username = sessionStorage.getItem("username");
-        if (!username) return;
+  const fetchExaminerAnalytics = async () => {
+    try {
+      const username = sessionStorage.getItem("username");
+      if (!username) return;
 
-        const [studentsPerExamRes, roomsCreatedRes] = await Promise.all([
-          fetch(`http://localhost:3000/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
-          fetch(`http://localhost:3000/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
-        ]);
+      setLoadingExaminerAnalytics(true);
 
-        const studentsPerExamData = await studentsPerExamRes.json();
-        const roomsCreatedData = await roomsCreatedRes.json();
+      const [studentsPerExamRes, roomsCreatedRes] = await Promise.all([
+        fetch(
+          `http://localhost:3000/api/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(
+            username
+          )}`
+        ),
+        fetch(
+          `http://localhost:3000/api/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(
+            username
+          )}`
+        ),
+      ]);
 
-        if (studentsPerExamData.success && roomsCreatedData.success) {
-          setExaminerAnalytics({
-            studentsPerExam: Array.isArray(studentsPerExamData.data) ? studentsPerExamData.data : [],
-            roomsCreated: roomsCreatedData.data || {},
-          });
-        } else {
-          setExaminerAnalytics({
-            studentsPerExam: [],
-            roomsCreated: {},
-          });
-        }
-      } catch (error) {
-        console.error("Failed to fetch examiner analytics:", error);
-      } finally {
-        setLoadingExaminerAnalytics(false);
+      // If either endpoint is missing or returns an error, fall back gracefully
+      if (!studentsPerExamRes.ok || !roomsCreatedRes.ok) {
+        console.error(
+          "Failed to fetch examiner analytics:",
+          studentsPerExamRes.status,
+          roomsCreatedRes.status
+        );
+        setExaminerAnalytics({
+          studentsPerExam: [],
+          roomsCreated: {},
+        });
+        return;
       }
 
       const studentsPerExamData = await studentsPerExamRes.json();
@@ -338,33 +341,7 @@ export default function Dashboard() {
           onClick={() => {
             fetchAnalytics();
             fetchExaminerRooms();
-            const username = sessionStorage.getItem("username");
-            if (username) {
-              const fetchExaminerAnalytics = async () => {
-                try {
-                  setLoadingExaminerAnalytics(true);
-                  const [studentsPerExamRes, roomsCreatedRes] = await Promise.all([
-                    fetch(`http://localhost:3000/analytics/examiner/students-per-exam?examinerUsername=${encodeURIComponent(username)}`),
-                    fetch(`http://localhost:3000/analytics/examiner/rooms-created?examinerUsername=${encodeURIComponent(username)}`)
-                  ]);
-
-                  const studentsPerExamData = await studentsPerExamRes.json();
-                  const roomsCreatedData = await roomsCreatedRes.json();
-
-                  if (studentsPerExamData.success && roomsCreatedData.success) {
-                    setExaminerAnalytics({
-                      studentsPerExam: studentsPerExamData.data,
-                      roomsCreated: roomsCreatedData.data
-                    });
-                  }
-                } catch (error) {
-                  console.error("Failed to fetch examiner analytics:", error);
-                } finally {
-                  setLoadingExaminerAnalytics(false);
-                }
-              };
-              fetchExaminerAnalytics();
-            }
+            fetchExaminerAnalytics();
           }}
           disabled={loading || loadingExaminerAnalytics}
           className="mt-4 md:mt-0 px-4 py-2 bg-white/50 text-gray-800 rounded-lg hover:bg-white/70 transition-colors flex items-center gap-2"

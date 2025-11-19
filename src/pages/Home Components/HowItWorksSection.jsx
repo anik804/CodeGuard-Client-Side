@@ -14,7 +14,7 @@ const HowItWorksSection = () => {
   const steps = [
     {
       icon: Users,
-      step: "01",
+      //step: "01",
       title: "Create & Join",
       description:
         "Examiners create exam rooms with unique identifiers. Students join seamlessly using room IDs for instant access.",
@@ -23,7 +23,7 @@ const HowItWorksSection = () => {
     },
     {
       icon: MonitorCheck,
-      step: "02",
+     // step: "02",
       title: "Screen Share",
       description:
         "Real-time screen monitoring ensures complete transparency. Advanced tracking captures every activity during exams.",
@@ -32,7 +32,7 @@ const HowItWorksSection = () => {
     },
     {
       icon: BarChart3,
-      step: "03",
+     // step: "03",
       title: "Track & Analyze",
       description:
         "Comprehensive analytics dashboard. Monitor activities, detect anomalies, and generate detailed reports instantly.",
@@ -42,7 +42,8 @@ const HowItWorksSection = () => {
   ];
 
   return (
-    <section className="py-24 bg-gradient-to-b from-background via-background to-muted/20 relative overflow-hidden">
+    <section id="how-it-works"
+     className="py-24 bg-gradient-to-b from-background via-background to-muted/20 relative overflow-hidden">
       {/* React Bits: Gradient Background */}
       <GradientBackground
         gradients={[
@@ -118,7 +119,7 @@ const HowItWorksSection = () => {
               >
                 <div className="p-8 lg:p-10">
                   {/* Step number with React Bits animation */}
-                  <motion.div
+                  {/* <motion.div
                     initial={{ scale: 0, rotate: -180 }}
                     whileInView={{ scale: 1, rotate: 0 }}
                     viewport={{ once: true }}
@@ -130,7 +131,7 @@ const HowItWorksSection = () => {
                     className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br ${item.gradient} text-white font-bold text-xl mb-6 shadow-lg`}
                   >
                     {item.step}
-                  </motion.div>
+                  </motion.div> */}
 
                   {/* Icon with React Bits animation */}
                   <motion.div
