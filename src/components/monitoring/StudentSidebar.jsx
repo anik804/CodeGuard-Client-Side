@@ -27,7 +27,7 @@ export function StudentSidebar({
     setLoading(true);
     try {
       const response = await fetch(
-        `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/students?page=${page}&limit=${itemsPerPage}`
+        `http://localhost:3000/rooms/${roomId}/students?page=${page}&limit=${itemsPerPage}`
       );
       const data = await response.json();
       if (data.success) {

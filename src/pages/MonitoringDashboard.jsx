@@ -104,7 +104,7 @@ export default function MonitoringDashboardPage() {
     socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
 
     // Fetch exam details
-    fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/exam-details`)
+    fetch(`http://localhost:3000/rooms/${roomId}/exam-details`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.room) {
@@ -117,7 +117,7 @@ export default function MonitoringDashboardPage() {
       .catch((err) => console.error("Failed to fetch exam details:", err));
 
     // Fetch existing question
-    fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question`)
+    fetch(`http://localhost:3000/rooms/${roomId}/question`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.hasQuestion) {
@@ -174,7 +174,7 @@ export default function MonitoringDashboardPage() {
   // Fetch submissions
   const fetchSubmissions = async () => {
     try {
-      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/${roomId}/submissions`);
+      const response = await fetch(`http://localhost:3000/submissions/${roomId}/submissions`);
       const data = await response.json();
       if (data.success) {
         setSubmissions(data.submissions || []);
@@ -220,7 +220,7 @@ export default function MonitoringDashboardPage() {
 
     try {
       const response = await axios.post(
-        `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question`,
+        `http://localhost:3000/rooms/${roomId}/question`,
         formData,
         {
           headers: {
@@ -252,7 +252,7 @@ export default function MonitoringDashboardPage() {
   const startExam = async () => {
     try {
       if (examDetails) {
-        await fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/exam-details`, {
+        await fetch(`http://localhost:3000/rooms/${roomId}/exam-details`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -267,7 +267,7 @@ export default function MonitoringDashboardPage() {
       setExamEnded(false);
       timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
       
-      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/question`);
+      const response = await fetch(`http://localhost:3000/rooms/${roomId}/question`);
       const data = await response.json();
       
       if (data.success && data.hasQuestion) {
@@ -325,7 +325,7 @@ export default function MonitoringDashboardPage() {
   // Export attendance
   const handleExportAttendance = async () => {
     try {
-      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/attendance/export`);
+      const response = await fetch(`http://localhost:3000/rooms/${roomId}/attendance/export`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -685,7 +685,7 @@ export default function MonitoringDashboardPage() {
                                 <Button
                                   onClick={async () => {
                                     try {
-                                      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/submission/${submission._id}/download`);
+                                      const response = await fetch(`http://localhost:3000/submissions/submission/${submission._id}/download`);
                                       const data = await response.json();
                                       if (data.success) {
                                         window.open(data.url, '_blank');
@@ -703,7 +703,7 @@ export default function MonitoringDashboardPage() {
                                 <Button
                                   onClick={async () => {
                                     try {
-                                      const response = await fetch(`https://codeguard-server-side-walb.onrender.com/api/submissions/submission/${submission._id}/download`);
+                                      const response = await fetch(`http://localhost:3000/submissions/submission/${submission._id}/download`);
                                       const data = await response.json();
                                       if (data.success) {
                                         const a = document.createElement('a');

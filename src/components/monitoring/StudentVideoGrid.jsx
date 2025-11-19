@@ -53,7 +53,7 @@ export function StudentVideoGrid({
     const fetchPaginatedStudents = async (silent = false) => {
       try {
         const response = await fetch(
-          `https://codeguard-server-side-walb.onrender.com/api/rooms/${roomId}/students?page=${currentPage}&limit=${itemsPerPage}`
+          `http://localhost:3000/rooms/${roomId}/students?page=${currentPage}&limit=${itemsPerPage}`
         );
         const data = await response.json();
         if (data.success) {
