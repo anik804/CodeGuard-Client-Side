@@ -27,7 +27,6 @@ const Navbar = () => {
     const [activeSection, setActiveSection] = useState("hero");
 
     const isHome = location.pathname === "/";
-    // const navItems = isHome ? [...sectionLinks, ...pageLinks] : pageLinks;
     const navItems = isHome 
     ? [...pageLinks, ...sectionLinks]
     : pageLinks;
@@ -258,3 +257,4 @@ const Navbar = () => {
 
 export default Navbar;
 
+// trail
