@@ -71,12 +71,13 @@ export default function StudentDashboard2() {
   const fetchExamHistory = async (id) => {
     try {
       setLoadingHistory(true);
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       const response = await fetch(
-        `http://localhost:3000/api/analytics/student/exam-history?studentId=${encodeURIComponent(id)}`
+        `${API_BASE_URL}/api/exam-history/student?studentId=${encodeURIComponent(id)}`
       );
       const data = await response.json();
       if (data.success) {
-        setExamHistory(data.data);
+        setExamHistory(data.data || []);
       }
     } catch (err) {
       console.error("Error fetching exam history:", err);
