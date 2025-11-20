@@ -1,12 +1,12 @@
 import { motion } from "framer-motion";
-import { Shield, Zap, Lock, ArrowDown } from "lucide-react";
+import { ArrowDown, Lock, Shield, Zap } from "lucide-react";
 import {
-  GradientText,
-  AnimatedText,
-  ParticleBackground,
-  GradientBackground,
-  AnimatedButton,
   AnimatedBadge,
+  AnimatedButton,
+  AnimatedText,
+  GradientText,
+  LightRays,
+  ParticleBackground,
   StaggerContainer,
   StaggerItem,
 } from "../../components/react-bits";
@@ -15,34 +15,39 @@ const HeroSection = () => {
   return (
     <section
       id="hero"
-      className="relative w-full min-h-screen flex items-center justify-center text-center overflow-hidden"
-      style={{
-        backgroundImage: `url('https://i.ibb.co/TxBhXYq4/c1-DYNu0y-B7.webp')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
+      className="relative w-full min-h-screen flex items-center justify-center text-center overflow-hidden pt-24 sm:pt-28 bg-black"
     >
-      {/* React Bits: Gradient Background */}
-      <GradientBackground
-        gradients={[
-          "from-black/85 via-black/90 to-black/85",
-          "from-gray-900/60 via-gray-800/60 to-black/60",
-        ]}
-        animate={true}
-      />
-      <div className="absolute inset-0 bg-black/65 z-0"></div>
+      {/* React Bits: Light Rays Background - Bottom layer */}
+      <div className="absolute inset-0 z-0">
+        <LightRays
+          raysOrigin="top-center"
+          raysColor="#ffffff"
+          raysSpeed={1}
+          lightSpread={0.5}
+          rayLength={3}
+          pulsating={true}
+          fadeDistance={1}
+          saturation={1}
+          followMouse={true}
+          mouseInfluence={0.1}
+          noiseAmount={0}
+          distortion={0}
+        />
+      </div>
 
-      {/* React Bits: Particle Background */}
-      <ParticleBackground
-        count={70}
-        colors={[
-          "rgba(255,255,255,0.35)",
-          "rgba(200,200,200,0.25)",
-          "rgba(160,160,160,0.2)",
-        ]}
-        sizeRange={[2, 6]}
-        speedRange={[15, 45]}
-      />
+      {/* React Bits: Particle Background - Reduced opacity */}
+      <div className="absolute inset-0 z-[3]">
+        <ParticleBackground
+          count={50}
+          colors={[
+            "rgba(255,255,255,0.2)",
+            "rgba(200,200,200,0.15)",
+            "rgba(160,160,160,0.1)",
+          ]}
+          sizeRange={[2, 6]}
+          speedRange={[15, 45]}
+        />
+      </div>
 
       {/* React Bits: Stagger Container */}
       <StaggerContainer

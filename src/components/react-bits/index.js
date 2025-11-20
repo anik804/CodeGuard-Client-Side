@@ -10,4 +10,7 @@ export { default as StaggerContainer } from "./StaggerContainer";
 export { default as StaggerItem } from "./StaggerItem";
 export { default as GlowEffect } from "./GlowEffect";
 export { default as CardSwap } from "./CardSwap";
+export { default as LightRays } from "./LightRays";
+export { default as DotGrid } from "./DotGrid";
+export { default as SquareGrid } from "./SquareGrid";
 

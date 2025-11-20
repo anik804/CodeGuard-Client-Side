@@ -1,17 +1,23 @@
+// eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from "framer-motion";
+import Lottie from "lottie-react";
 import { useContext, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import logo from "../assets/logo.png";
 import { AuthContext } from "../provider/AuthProvider";
+import { SquareGrid } from "./react-bits";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
 const AuthPage = () => {
   const [activeTab, setActiveTab] = useState("login");
   const [role, setRole] = useState("student");
+  const [lottieData, setLottieData] = useState(null);
   const navigate = useNavigate();
-  const { createUser, signInUser } = useContext(AuthContext);
+  const { createUser } = useContext(AuthContext);
+  
 
   const {
     register: loginRegister,
@@ -27,6 +33,7 @@ const AuthPage = () => {
     reset: resetRegister,
   } = useForm();
 
+
   const handleRoleChange = (newRole) => {
     setRole(newRole);
     resetRegister();
@@ -37,6 +44,13 @@ const AuthPage = () => {
     if (storedRole === "examiner") navigate("/examiner-dashboard", { replace: true });
     if (storedRole === "student") navigate("/student-dashboard", { replace: true });
   }, [navigate]);
+
+  useEffect(() => {
+    fetch("/Login.json")
+      .then((res) => res.json())
+      .then((data) => setLottieData(data))
+      .catch((err) => console.error("Error loading Lottie animation:", err));
+  }, []);
 
   const onRegister = async (data) => {
     try {
@@ -54,7 +68,9 @@ const AuthPage = () => {
           toast.error("Unable to verify Google email. Try again.");
           return;
         }
-      } catch { }
+      } catch {
+        // Silently continue if DNS check fails
+      }
 
       const firebaseUser = await createUser(email, password);
 
@@ -133,36 +149,59 @@ const AuthPage = () => {
   };
 
   return (
-    <div
-      className="relative min-h-screen flex items-center justify-center bg-cover bg-center px-4 sm:px-6"
-      style={{
-        backgroundImage: "url('https://i.ibb.co/TxBhXYq4/c1-DYNu0y-B7.webp')",
-      }}
-    >
-      {/* Faded Overlay */}
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-black px-4 sm:px-6">
+      {/* Square Grid Background */}
+      <SquareGrid
+        squareColor="rgba(255, 255, 255, 0.15)"
+        squareSize={20}
+        spacing={40}
+        animate={true}
+      />
 
-      <div className="relative z-10 bg-white/90 backdrop-blur-md rounded-2xl shadow-lg flex flex-col md:flex-row w-full max-w-4xl overflow-hidden">
-        {/* Left Section */}
-        <div className="w-full md:w-1/2 bg-gray-100 flex flex-col justify-center items-center p-6 sm:p-8">
-          <img
-            src="https://i.ibb.co/MDQ3jcf4/Png-Item-5916871.png"
-            alt="IIUC Logo"
-            className="w-20 sm:w-24 mb-3 sm:mb-4"
-          />
-          <h1 className="text-xl sm:text-2xl font-bold">IIUC</h1>
-          <p className="text-gray-600 text-xs sm:text-sm mt-1 sm:mt-2 text-center">CodeGuard - Secure Lab Exam</p>
+      {/* Logo and Name Header */}
+      <div className="relative z-10 mb-6 flex items-center gap-3 cursor-pointer" onClick={() => navigate("/")}>
+        <motion.img
+          src={logo}
+          alt="CodeGuard logo"
+          className="w-10 h-10 drop-shadow-lg"
+          style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%)' }}
+          whileHover={{ scale: 1.1, rotate: 8 }}
+          transition={{ type: "spring", stiffness: 300 }}
+        />
+        <motion.span
+          className="text-2xl font-black bg-gradient-to-r from-green-400 via-green-500 to-green-600 bg-clip-text text-transparent"
+          whileHover={{ scale: 1.05 }}
+        >
+          CodeGuard
+        </motion.span>
+      </div>
 
+      <div className="relative z-10 rounded-2xl flex flex-col md:flex-row w-full max-w-4xl overflow-hidden">
+        {/* Left Section with Lottie */}
+        <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-6 sm:p-8">
+          <div className="w-full max-w-sm h-64 sm:h-80 mb-4">
+            {lottieData ? (
+              <Lottie
+                animationData={lottieData}
+                loop={true}
+                className="w-full h-full"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+              </div>
+            )}
+          </div>
           <div className="mt-6 sm:mt-8 flex gap-3 sm:gap-4 flex-wrap justify-center">
             <button
-              className={`px-3 sm:px-4 py-2 font-medium rounded-md ${activeTab === "login" ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-700"
+              className={`px-3 sm:px-4 py-2 font-medium rounded-md transition-colors ${activeTab === "login" ? "bg-indigo-500 text-white" : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
                 }`}
               onClick={() => setActiveTab("login")}
             >
               Login
             </button>
             <button
-              className={`px-3 sm:px-4 py-2 font-medium rounded-md ${activeTab === "register" ? "bg-indigo-500 text-white" : "bg-gray-200 text-gray-700"
+              className={`px-3 sm:px-4 py-2 font-medium rounded-md transition-colors ${activeTab === "register" ? "bg-indigo-500 text-white" : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
                 }`}
               onClick={() => setActiveTab("register")}
             >
@@ -172,7 +211,7 @@ const AuthPage = () => {
         </div>
 
         {/* Right Section */}
-        <div className="w-full md:w-1/2 p-6 sm:p-8">
+        <div className="w-full md:w-1/2 p-6 sm:p-8 text-white">
           <AnimatePresence mode="wait">
             {activeTab === "login" && (
               <motion.form
@@ -187,9 +226,9 @@ const AuthPage = () => {
                 <div className="flex gap-3 sm:gap-4 justify-center mb-4 flex-wrap">
                   <button
                     type="button"
-                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${role === "student"
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium transition-colors ${role === "student"
                         ? "bg-indigo-500 text-white"
-                        : "bg-gray-200 text-gray-700"
+                        : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
                       }`}
                     onClick={() => setRole("student")}
                   >
@@ -197,9 +236,9 @@ const AuthPage = () => {
                   </button>
                   <button
                     type="button"
-                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${role === "examiner"
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium transition-colors ${role === "examiner"
                         ? "bg-indigo-500 text-white"
-                        : "bg-gray-200 text-gray-700"
+                        : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
                       }`}
                     onClick={() => setRole("examiner")}
                   >
@@ -254,9 +293,9 @@ const AuthPage = () => {
                 <div className="flex gap-3 sm:gap-4 justify-center mb-4 flex-wrap">
                   <button
                     type="button"
-                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${role === "student"
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium transition-colors ${role === "student"
                         ? "bg-indigo-500 text-white"
-                        : "bg-gray-200 text-gray-700"
+                        : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
                       }`}
                     onClick={() => handleRoleChange("student")}
                   >
@@ -264,9 +303,9 @@ const AuthPage = () => {
                   </button>
                   <button
                     type="button"
-                    className={`px-3 sm:px-4 py-2 rounded-md font-medium ${role === "examiner"
+                    className={`px-3 sm:px-4 py-2 rounded-md font-medium transition-colors ${role === "examiner"
                         ? "bg-indigo-500 text-white"
-                        : "bg-gray-200 text-gray-700"
+                        : "bg-white/10 text-white/70 hover:bg-white/20 hover:text-white"
                       }`}
                     onClick={() => handleRoleChange("examiner")}
                   >

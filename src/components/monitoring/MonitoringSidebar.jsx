@@ -110,7 +110,7 @@ function StudentsTab({ roomId }) {
 }
 
 // Activity Log Tab Content
-function ActivityTab({ roomId, flaggedStudents }) {
+function ActivityTab({ roomId, flaggedStudents, onUpdateFlaggedStudents, students = [] }) {
   const [logs, setLogs] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState(null);
@@ -142,7 +142,7 @@ function ActivityTab({ roomId, flaggedStudents }) {
       
       return () => clearInterval(interval);
     }
-  }, [roomId, currentPage]);
+  }, [roomId, currentPage, students]); // Add students to dependencies
 
   // Remove highlight from new logs after 3 seconds
   useEffect(() => {
@@ -173,6 +173,43 @@ function ActivityTab({ roomId, flaggedStudents }) {
       const data = await response.json();
       if (data.success) {
         const fetchedLogs = data.logs || [];
+        
+        // Update flagged students based on logs
+        if (onUpdateFlaggedStudents && fetchedLogs.length > 0) {
+          const identifiersToAdd = new Set();
+          
+          fetchedLogs.forEach(log => {
+            // Add identifiers from log
+            if (log.studentId) {
+              identifiersToAdd.add(log.studentId);
+              identifiersToAdd.add(String(log.studentId));
+            }
+            if (log.socketId) {
+              identifiersToAdd.add(log.socketId);
+              identifiersToAdd.add(String(log.socketId));
+            }
+            
+            // Try to find matching student in students list
+            const matchingStudent = students.find(s => 
+              s.studentId === log.studentId ||
+              s.socketId === log.socketId ||
+              String(s.studentId) === String(log.studentId) ||
+              String(s.socketId) === String(log.socketId)
+            );
+            
+            if (matchingStudent) {
+              identifiersToAdd.add(matchingStudent.studentId);
+              identifiersToAdd.add(String(matchingStudent.studentId));
+              identifiersToAdd.add(matchingStudent.socketId);
+              identifiersToAdd.add(String(matchingStudent.socketId));
+            }
+          });
+          
+          if (identifiersToAdd.size > 0) {
+            onUpdateFlaggedStudents(Array.from(identifiersToAdd));
+            console.log("🔍 Activity logs updated flagged students:", Array.from(identifiersToAdd));
+          }
+        }
         
         if (isInitial) {
           // Initial load: set all logs for the requested page
@@ -574,7 +611,7 @@ function BlockedWebsitesTab({ roomId }) {
   );
 }
 
-export function MonitoringSidebar({ roomId, flaggedStudents = new Set(), isOpen, onClose }) {
+export function MonitoringSidebar({ roomId, flaggedStudents = new Set(), isOpen, onClose, onUpdateFlaggedStudents, students = [] }) {
   return (
     <AnimatePresence>
       {isOpen && (
@@ -633,7 +670,12 @@ export function MonitoringSidebar({ roomId, flaggedStudents = new Set(), isOpen,
                 <StudentsTab roomId={roomId} />
               </TabsContent>
               <TabsContent value="activity" className="h-full m-0 mt-0">
-                <ActivityTab roomId={roomId} flaggedStudents={flaggedStudents} />
+                <ActivityTab 
+                  roomId={roomId} 
+                  flaggedStudents={flaggedStudents}
+                  onUpdateFlaggedStudents={onUpdateFlaggedStudents}
+                  students={students}
+                />
               </TabsContent>
               <TabsContent value="blocked" className="h-full m-0 mt-0">
                 <BlockedWebsitesTab roomId={roomId} />
