@@ -1,8 +1,8 @@
 // src/components/Navbar.jsx
-import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
 const sectionLinks = [
@@ -27,9 +27,8 @@ const Navbar = () => {
     const [activeSection, setActiveSection] = useState("hero");
 
     const isHome = location.pathname === "/";
-    const navItems = isHome 
-    ? [...pageLinks, ...sectionLinks]
-    : pageLinks;
+    // Always show all navigation items
+    const navItems = [...pageLinks, ...sectionLinks];
 
 
     useEffect(() => {
@@ -71,6 +70,10 @@ const Navbar = () => {
             }
         );
 
+        // Observe hero section
+        const heroElement = document.getElementById("hero");
+        if (heroElement) observer.observe(heroElement);
+
         sectionLinks.forEach(({ id }) => {
             const element = document.getElementById(id);
             if (element) observer.observe(element);
@@ -102,10 +105,14 @@ const Navbar = () => {
             <div className="px-4 sm:px-6 lg:px-10">
                 <motion.div
                     layout
-                    className={`mx-auto flex items-center justify-between gap-4 md:gap-8 pointer-events-auto border backdrop-blur bg-white transition-all duration-500 ${isScrolled
-                            ? "max-w-5xl mt-3 rounded-full border-black/5 shadow-lg"
-                            : "max-w-7xl mt-6 rounded-[32px] border-black/5 shadow-[0_25px_60px_rgba(0,0,0,0.08)]"
-                        }`}
+                    className={`mx-auto flex items-center justify-between gap-4 md:gap-8 pointer-events-auto transition-all duration-500 ${
+                        activeSection === "hero" && !isScrolled
+                            ? "max-w-7xl mt-6 border-0 backdrop-blur-none bg-transparent"
+                            : `border backdrop-blur bg-black ${isScrolled
+                                ? "max-w-5xl mt-3 rounded-full border-white/10 shadow-lg"
+                                : "max-w-7xl mt-6 rounded-[32px] border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.5)]"
+                            }`
+                    }`}
                 >
                     <div className="flex items-center gap-4 px-4 py-3">
                         <motion.button
@@ -117,11 +124,12 @@ const Navbar = () => {
                                 src={logo}
                                 alt="CodeGuard logo"
                                 className="w-10 h-10 drop-shadow-lg"
+                                style={{ filter: 'brightness(0) saturate(100%) invert(48%) sepia(79%) saturate(2476%) hue-rotate(86deg) brightness(118%) contrast(119%)' }}
                                 whileHover={{ rotate: 8 }}
                                 transition={{ type: "spring", stiffness: 300 }}
                             />
                             <motion.span
-                                className="text-xl font-black bg-gradient-to-r from-indigo-600 via-pink-500 to-purple-600 bg-clip-text text-transparent"
+                                className="text-xl font-black bg-gradient-to-r from-green-400 via-green-500 to-green-600 bg-clip-text text-transparent"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.2 }}
@@ -137,17 +145,32 @@ const Navbar = () => {
                             const isActive = isSection
                                 ? activeSection === item.id
                                 : location.pathname === item.path;
+                            const isOnHero = activeSection === "hero" && !isScrolled;
                             return (
                                 <button
                                     key={item.label}
                                     onClick={() => handleNavClick(item)}
-                                    className={`relative text-sm font-semibold transition-all duration-300 ${isActive ? "text-black" : "text-gray-500 hover:text-black"
-                                        }`}
+                                    className={`relative text-sm font-semibold transition-all duration-300 ${
+                                        isOnHero
+                                            ? isActive
+                                                ? "text-white"
+                                                : "text-white/70 hover:text-white"
+                                            : isActive
+                                                ? "text-green-400"
+                                                : "text-gray-300 hover:text-green-400"
+                                    }`}
                                 >
                                     {item.label}
                                     <span
-                                        className={`absolute left-0 -bottom-1 h-[2px] rounded-full transition-all duration-300 ${isActive ? "w-full bg-black" : "w-0 bg-black/50"
-                                            }`}
+                                        className={`absolute left-0 -bottom-1 h-[2px] rounded-full transition-all duration-300 ${
+                                            isOnHero
+                                                ? isActive
+                                                    ? "w-full bg-white"
+                                                    : "w-0 bg-white/50"
+                                                : isActive
+                                                    ? "w-full bg-green-400"
+                                                    : "w-0 bg-green-400/50"
+                                        }`}
                                     />
                                 </button>
                             );
@@ -157,7 +180,11 @@ const Navbar = () => {
                     <div className="hidden md:flex items-center gap-3 pr-4">
                         <Button
                             size="lg"
-                            className="rounded-full bg-black text-white shadow-lg hover:shadow-xl transition"
+                            className={`rounded-full shadow-lg hover:shadow-xl transition ${
+                                activeSection === "hero" && !isScrolled
+                                    ? "bg-white text-black hover:bg-white/90"
+                                    : "bg-green-500 text-white hover:bg-green-600"
+                            }`}
                             onClick={() => {
                                 setIsOpen(false);
                                 navigate("/auth/login");
@@ -170,7 +197,11 @@ const Navbar = () => {
                     <div className="md:hidden flex items-center pr-4">
                         <motion.button
                             onClick={() => setIsOpen((prev) => !prev)}
-                            className="p-2 rounded-full border border-black/10 text-gray-900"
+                            className={`p-2 rounded-full border transition-all ${
+                                activeSection === "hero" && !isScrolled
+                                    ? "border-white/30 text-white"
+                                    : "border-white/20 text-white"
+                            }`}
                             whileTap={{ scale: 0.9 }}
                             aria-label="Toggle navigation menu"
                         >
@@ -220,18 +251,30 @@ const Navbar = () => {
                 className="md:hidden px-4"
             >
                 {isOpen && (
-                    <div className="mt-4 rounded-3xl border border-black/5 bg-white shadow-lg p-6 flex flex-col gap-4 pointer-events-auto">
+                    <div className={`mt-4 rounded-3xl border shadow-lg p-6 flex flex-col gap-4 pointer-events-auto transition-all ${
+                        activeSection === "hero" && !isScrolled
+                            ? "border-white/20 bg-white/10 backdrop-blur-md"
+                            : "border-white/20 bg-black/95 backdrop-blur-md"
+                    }`}>
                         {navItems.map((item) => {
                             const isSection = Boolean(item.id);
                             const isActive = isSection
                                 ? activeSection === item.id
                                 : location.pathname === item.path;
+                            const isOnHero = activeSection === "hero" && !isScrolled;
                             return (
                                 <button
                                     key={item.label}
                                     onClick={() => handleNavClick(item)}
-                                    className={`text-base font-semibold transition-all text-left ${isActive ? "text-black" : "text-gray-600"
-                                        }`}
+                                    className={`text-base font-semibold transition-all text-left ${
+                                        isOnHero
+                                            ? isActive
+                                                ? "text-white"
+                                                : "text-white/70"
+                                            : isActive
+                                                ? "text-green-400"
+                                                : "text-gray-300"
+                                    }`}
                                 >
                                     {item.label}
                                 </button>
@@ -240,7 +283,11 @@ const Navbar = () => {
 
                         <Button
                             size="lg"
-                            className="mt-2 rounded-2xl bg-black text-white shadow-lg"
+                            className={`mt-2 rounded-2xl shadow-lg ${
+                                activeSection === "hero" && !isScrolled
+                                    ? "bg-white text-black hover:bg-white/90"
+                                    : "bg-green-500 text-white hover:bg-green-600"
+                            }`}
                             onClick={() => {
                                 setIsOpen(false);
                                 navigate("/auth/login");
