@@ -24,16 +24,33 @@ function StudentsTab({ roomId }) {
   const fetchStudents = async (page) => {
     setLoading(true);
     try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       const response = await fetch(
-        `http://localhost:3000/api/rooms/${roomId}/students?page=${page}&limit=${itemsPerPage}`
+        `${API_BASE_URL}/api/rooms/${roomId}/students?page=${page}&limit=${itemsPerPage}`
       );
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Room not found or not initialized yet
+          setStudents([]);
+          setPagination(null);
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       if (data.success) {
         setStudents(data.students || []);
         setPagination(data.pagination);
+      } else {
+        setStudents([]);
+        setPagination(null);
       }
     } catch (error) {
       console.error("Failed to fetch students:", error);
+      setStudents([]);
+      setPagination(null);
     } finally {
       setLoading(false);
     }

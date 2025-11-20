@@ -18,6 +18,7 @@ import StudentDashboard2 from "./pages/StudentDashboard2";
 import StudentProfile from "./pages/StudentProfile";
 import { StudentDashboardContent } from "./pages/StudentDashboard";
 import ExamInstructionPage from "./pages/ExamInstructionPage";
+import StudentExamHistory from "./pages/StudentExamHistory";
 // import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
 import AboutUs from "./pages/AboutUs";
@@ -85,6 +86,7 @@ const router = createBrowserRouter([
         path: "join-exam",
         element: <StudentDashboardContent></StudentDashboardContent>,
       },
+      { path: "exam-history", element: <StudentExamHistory /> },
       { path: "exam/:roomId", element: <ExamInstructionPage /> },
       { path: "stu-profile", element: <StudentProfile /> },
     ],

@@ -9,18 +9,35 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    if (ref.current) {
+    if (ref.current && stream) {
       ref.current.srcObject = stream;
       ref.current.onloadedmetadata = () => {
-        ref.current.play().catch(console.error);
+        if (ref.current && !ref.current.paused) {
+          ref.current.play().catch((err) => {
+            // Ignore play() errors - they're often due to browser autoplay policies
+            if (!err.message.includes("play() request was interrupted")) {
+              console.warn("Video play error:", err);
+            }
+          });
+        }
       };
     }
 
-    const handleError = (err) => console.error("Peer error:", err);
-    peer.on("error", handleError);
+    const handleError = (err) => {
+      // Only log non-connection errors to avoid spam
+      if (!err?.message?.toLowerCase().includes("connection failed")) {
+        console.error("Peer error:", err);
+      }
+    };
+    
+    if (peer && typeof peer.on === 'function') {
+      peer.on("error", handleError);
+    }
 
     return () => {
-      peer.off("error", handleError);
+      if (peer && typeof peer.off === 'function') {
+        peer.off("error", handleError);
+      }
     };
   }, [peer, stream]);
 

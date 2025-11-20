@@ -2,7 +2,17 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Download, Calendar, Users, AlertTriangle, Loader2, RefreshCw, Clock, FileText, ChevronRight, X } from "lucide-react";
+import { 
+  Calendar, 
+  Users, 
+  Loader2, 
+  RefreshCw, 
+  Clock, 
+  FileText, 
+  ChevronRight,
+  User,
+  AlertTriangle
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -24,11 +34,11 @@ const containerVariants = {
 };
 
 const rowVariants = {
-  hidden: { opacity: 0, x: -20 },
-  visible: { opacity: 1, x: 0 },
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
 };
 
-export default function ExamHistory() {
+export default function StudentExamHistory() {
   const [examHistory, setExamHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -43,15 +53,16 @@ export default function ExamHistory() {
     try {
       setLoading(true);
       setError(null);
-      const examinerUsername = sessionStorage.getItem('username');
-      const examinerId = sessionStorage.getItem('examinerId');
+      const studentId = sessionStorage.getItem('studentId');
       
-      const queryParams = new URLSearchParams();
-      if (examinerUsername) queryParams.append('examinerUsername', examinerUsername);
-      if (examinerId) queryParams.append('examinerId', examinerId);
+      if (!studentId) {
+        setError('Student ID not found. Please log in again.');
+        toast.error('Student ID not found');
+        return;
+      }
       
       const response = await fetch(
-        `${API_BASE_URL}/api/exam-history/examiner?${queryParams}`
+        `${API_BASE_URL}/api/exam-history/student?studentId=${encodeURIComponent(studentId)}`
       );
       
       const data = await response.json();
@@ -71,14 +82,8 @@ export default function ExamHistory() {
     }
   };
 
-  const handleExportReport = () => {
-    // Export logic here
-    toast.info('Export feature coming soon');
-  };
-
   const handleViewDetails = async (exam) => {
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       const response = await fetch(`${API_BASE_URL}/api/exam-history/${exam.roomId}`);
       const data = await response.json();
       
@@ -92,10 +97,6 @@ export default function ExamHistory() {
       console.error('Error fetching exam details:', err);
       toast.error('Failed to load exam details');
     }
-  };
-
-  const handleNavigateToMonitoring = (roomId) => {
-    window.location.href = `/monitoring/${roomId}`;
   };
 
   if (loading) {
@@ -125,9 +126,8 @@ export default function ExamHistory() {
   }
 
   // Calculate stats
-  const totalStudents = examHistory.reduce((sum, exam) => sum + (exam.students || 0), 0);
-  const totalSubmissions = examHistory.reduce((sum, exam) => sum + (exam.submissions || 0), 0);
-  const totalAlerts = examHistory.reduce((sum, exam) => sum + (exam.alerts || 0), 0);
+  const totalExams = examHistory.length;
+  const submittedExams = examHistory.filter(exam => exam.submitted).length;
 
   return (
     <motion.div
@@ -138,51 +138,37 @@ export default function ExamHistory() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold gradient-text">Exam History</h1>
+          <h1 className="text-3xl font-bold gradient-text">My Exam History</h1>
           <p className="text-muted-foreground mt-2">
-            View and manage all past and completed exams
+            View all exams you have taken
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={fetchExamHistory}
-            disabled={loading}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button className="bg-primary hover:bg-primary/90" onClick={handleExportReport}>
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
-          </Button>
-        </div>
+        <Button 
+          variant="outline" 
+          onClick={fetchExamHistory}
+          disabled={loading}
+        >
+          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Total Exams</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Exams Taken</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{examHistory.length}</div>
+            <div className="text-2xl font-bold">{totalExams}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+            <CardTitle className="text-sm font-medium">Exams Submitted</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalStudents}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Total Submissions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalSubmissions}</div>
+            <div className="text-2xl font-bold">{submittedExams}</div>
           </CardContent>
         </Card>
       </div>
@@ -218,17 +204,23 @@ export default function ExamHistory() {
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <CardTitle className="text-lg font-semibold line-clamp-2">
-                          {exam.title}
+                          {exam.examName || exam.courseName || 'Untitled Exam'}
                         </CardTitle>
                         <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 ml-2" />
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <User className="w-4 h-4" />
+                        <span className="line-clamp-1">
+                          Examiner: {exam.examinerName || exam.examinerUsername || 'Unknown'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Calendar className="w-4 h-4" />
                         <span>
-                          {exam.date 
-                            ? new Date(exam.date).toLocaleDateString('en-US', {
+                          {exam.examDate 
+                            ? new Date(exam.examDate).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'short',
                                 day: 'numeric'
@@ -236,25 +228,17 @@ export default function ExamHistory() {
                             : 'N/A'}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Users className="w-4 h-4 text-blue-500" />
-                          <span className="font-medium">{exam.students || 0}</span>
-                          <span className="text-muted-foreground">Students</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm">
-                          <FileText className="w-4 h-4 text-green-500" />
-                          <span className="font-medium">{exam.submissions || 0}</span>
-                          <span className="text-muted-foreground">Submissions</span>
-                        </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Users className="w-4 h-4 text-blue-500" />
+                        <span className="font-medium">{exam.totalStudents || 0}</span>
+                        <span className="text-muted-foreground">Total Students</span>
                       </div>
                       <div className="flex items-center justify-between pt-2 border-t">
-                        <div className="flex items-center gap-2">
-                          <AlertTriangle className={`w-4 h-4 ${exam.alerts > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
-                          <span className={`text-sm font-medium ${exam.alerts > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {exam.alerts || 0} Alerts
-                          </span>
-                        </div>
+                        <Badge
+                          variant={exam.submitted ? "default" : "outline"}
+                        >
+                          {exam.submitted ? 'Submitted' : 'Not Submitted'}
+                        </Badge>
                         <Badge
                           variant={
                             exam.status === "completed"
@@ -280,7 +264,9 @@ export default function ExamHistory() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">{selectedExam?.examName || selectedExam?.courseName || 'Exam Details'}</DialogTitle>
+            <DialogTitle className="text-2xl">
+              {selectedExam?.examName || selectedExam?.courseName || 'Exam Details'}
+            </DialogTitle>
             <DialogDescription>
               Complete information about this exam
             </DialogDescription>
@@ -297,16 +283,18 @@ export default function ExamHistory() {
                   <p className="font-semibold">{selectedExam.roomId || 'N/A'}</p>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Examiner</p>
+                  <p className="font-semibold">
+                    {selectedExam.examinerName || selectedExam.examinerUsername || 'Unknown'}
+                  </p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg">
                   <p className="text-sm text-muted-foreground">Total Students</p>
                   <p className="font-semibold text-2xl">{selectedExam.totalStudentsJoined || 0}</p>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <p className="text-sm text-muted-foreground">Submissions</p>
                   <p className="font-semibold text-2xl">{selectedExam.submissionsCount || 0}</p>
-                </div>
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <p className="text-sm text-muted-foreground">Flagged Students</p>
-                  <p className="font-semibold text-2xl text-destructive">{selectedExam.flaggedStudentsCount || 0}</p>
                 </div>
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <p className="text-sm text-muted-foreground">Status</p>
@@ -345,15 +333,9 @@ export default function ExamHistory() {
 
               <div className="flex gap-2 pt-4">
                 <Button 
-                  onClick={() => handleNavigateToMonitoring(selectedExam.roomId)}
-                  className="flex-1"
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  View Monitoring Dashboard
-                </Button>
-                <Button 
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
+                  className="flex-1"
                 >
                   Close
                 </Button>
@@ -365,3 +347,4 @@ export default function ExamHistory() {
     </motion.div>
   );
 }
+

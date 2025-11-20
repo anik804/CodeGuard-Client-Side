@@ -298,28 +298,96 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
 
         peer.on("signal", (signalData) => {
           console.log("📤 Sending signal back to examiner:", signalData);
-          socketRef.current?.emit("send-signal", {
-            signal: signalData,
-            to: payload.from,
-          });
+          if (socketRef.current && !socketRef.current.disconnected) {
+            socketRef.current.emit("send-signal", {
+              signal: signalData,
+              to: payload.from,
+            });
+          }
         });
 
         peer.on("connect", () => {
           console.log("✅ Peer connection established with examiner");
         });
 
-        peer.on("error", (err) => console.error("Peer error:", err));
+        peer.on("error", (err) => {
+          console.error("Peer error:", err);
+          // Don't show error toast for connection failures - they're handled by retry logic
+          if (!err?.message?.toLowerCase().includes("connection failed")) {
+            console.warn("Peer connection issue:", err.message);
+          }
+        });
 
         peerRef.current = peer;
       }
 
-      // Signal the peer with the received signal
+      // Signal the peer with the received signal - check if peer is not destroyed
       try {
-        if (peerRef.current) {
+        if (peerRef.current && !peerRef.current.destroyed) {
           peerRef.current.signal(payload.signal);
+        } else {
+          console.warn("⚠️ Cannot signal - peer is destroyed or doesn't exist");
+          // Recreate peer if it was destroyed
+          if (!peerRef.current && streamRef.current) {
+            console.log("🔄 Recreating peer connection...");
+            const peer = new Peer({
+              initiator: false,
+              trickle: true,
+              stream: streamRef.current,
+              config: {
+                iceServers: [
+                  { urls: ["stun:bn-turn2.xirsys.com"] },
+                  {
+                    username:
+                      "J4u6YIUf1k35iq4q0pS1BfFWOC4UUQy25eT5ZsDsWdETzfXFw0TYZL4etEHu7VrnAAAAAGjmYQ5NdXNoZmlx",
+                    credential: "2403ae1a-a447-11f0-9415-0242ac140004",
+                    urls: [
+                      "turn:bn-turn2.xirsys.com:80?transport=udp",
+                      "turn:bn-turn2.xirsys.com:3478?transport=udp",
+                      "turn:bn-turn2.xirsys.com:80?transport=tcp",
+                      "turn:bn-turn2.xirsys.com:3478?transport=tcp",
+                      "turns:bn-turn2.xirsys.com:443?transport=tcp",
+                      "turns:bn-turn2.xirsys.com:5349?transport=tcp",
+                    ],
+                  },
+                ],
+              },
+            });
+
+            peer.on("signal", (signalData) => {
+              if (socketRef.current && !socketRef.current.disconnected) {
+                socketRef.current.emit("send-signal", {
+                  signal: signalData,
+                  to: payload.from,
+                });
+              }
+            });
+
+            peer.on("connect", () => {
+              console.log("✅ Peer connection re-established with examiner");
+            });
+
+            peer.on("error", (err) => {
+              console.error("Peer error (recreated):", err);
+            });
+
+            peerRef.current = peer;
+            // Try to signal again with the new peer
+            setTimeout(() => {
+              if (peerRef.current && !peerRef.current.destroyed) {
+                peerRef.current.signal(payload.signal);
+              }
+            }, 100);
+          }
         }
       } catch (err) {
-        console.error("Error signaling peer:", err);
+        // Check if error is about destroyed peer - this is expected and can be ignored
+        if (err?.message?.includes("destroyed")) {
+          console.warn("⚠️ Peer was destroyed, will recreate on next signal");
+          peerRef.current = null;
+        } else {
+          console.error("Error signaling peer:", err);
+        }
       }
     });
 
