@@ -72,14 +72,19 @@ export function useWebRTC(socketRef, setPeers, setStudents) {
     });
 
     peer.on("error", (err) => {
-      console.error("❌ Peer error:", err);
+      // Only log non-connection errors to avoid spam
+      const isConnectionError = err?.message?.toLowerCase().includes("connection failed");
+      
+      if (!isConnectionError) {
+        console.error("❌ Peer error:", err);
+      }
 
       const peerItem = peersRef.current.find((p) => p.peerId === socketId);
       const currentRetry = peerItem?.retryCount ?? retryCount;
 
       // Handle connection failed with limited automatic retries
       if (
-        err?.message?.toLowerCase().includes("connection failed") &&
+        isConnectionError &&
         currentRetry < MAX_RETRIES_PER_PEER
       ) {
         console.warn(
@@ -88,8 +93,12 @@ export function useWebRTC(socketRef, setPeers, setStudents) {
 
         // Clean up current peer
         try {
-          peer.destroy();
-        } catch {}
+          if (peer && !peer.destroyed) {
+            peer.destroy();
+          }
+        } catch (cleanupErr) {
+          // Ignore cleanup errors
+        }
 
         peersRef.current = peersRef.current.filter((p) => p.peerId !== socketId);
         setPeers([...peersRef.current]);
@@ -103,11 +112,12 @@ export function useWebRTC(socketRef, setPeers, setStudents) {
       }
 
       // Give a clear message after retries are exhausted or for other errors
-      if (currentRetry >= MAX_RETRIES_PER_PEER) {
+      if (currentRetry >= MAX_RETRIES_PER_PEER && !isConnectionError) {
         toast.error(
           `Unable to establish connection with ${studentInfo.name}. Please check their network or retry later.`
         );
-      } else {
+      } else if (!isConnectionError) {
+        // Only show toast for non-connection errors to avoid spam
         toast.error(`Connection error with ${studentInfo.name}`);
       }
     });
@@ -162,7 +172,20 @@ export function useWebRTC(socketRef, setPeers, setStudents) {
 
     socketRef.current.on("receive-signal", ({ signal, from }) => {
       const peerItem = peersRef.current.find((p) => p.peerId === from);
-      if (peerItem) peerItem.peer.signal(signal);
+      if (peerItem && peerItem.peer && !peerItem.peer.destroyed) {
+        try {
+          peerItem.peer.signal(signal);
+        } catch (err) {
+          // Handle destroyed peer errors gracefully
+          if (err?.message?.includes("destroyed")) {
+            console.warn(`Peer ${from} was destroyed, removing from list`);
+            peersRef.current = peersRef.current.filter((p) => p.peerId !== from);
+            setPeers([...peersRef.current]);
+          } else {
+            console.error("Error signaling peer:", err);
+          }
+        }
+      }
     });
 
     socketRef.current.on("student-left", (studentInfo) => {

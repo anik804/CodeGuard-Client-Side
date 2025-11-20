@@ -112,7 +112,7 @@
 
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { LayoutDashboard, User, LogOut, UserCheck, GraduationCap } from "lucide-react";
+import { LayoutDashboard, User, LogOut, UserCheck, GraduationCap, History } from "lucide-react";
 import {
   SidebarContent,
   SidebarGroup,
@@ -131,6 +131,7 @@ import { GoSidebarCollapse } from "react-icons/go";
 const menuItems = [
   { title: "Overview", url: ".", icon: LayoutDashboard },
   { title: "Join Exam", url: "join-exam", icon: UserCheck },
+  { title: "Exam History", url: "exam-history", icon: History },
   { title: "Profile", url: "stu-profile", icon: User },
 ];
 
