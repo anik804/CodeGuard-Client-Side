@@ -423,6 +423,32 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
   //   }
   // };
 
+  // Check if extension is available
+  const checkExtensionAvailable = () => {
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        window.removeEventListener("message", handler);
+        resolve(false);
+      }, 2000);
+      
+      window.postMessage({
+        target: "CODEGUARD_EXTENSION",
+        message: { type: "PING" }
+      }, window.location.origin);
+      
+      const handler = (event) => {
+        if (event.data?.target === "CODEGUARD_WEB_APP" && 
+            event.data?.type === "PONG") {
+          clearTimeout(timeout);
+          window.removeEventListener("message", handler);
+          resolve(true);
+        }
+      };
+      
+      window.addEventListener("message", handler);
+    });
+  };
+
   const startExam = async () => {
     if (!roomId) return;
 
@@ -431,13 +457,37 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       return;
     }
 
+    // Check if extension is available before starting exam
+    const extensionAvailable = await checkExtensionAvailable();
+    if (!extensionAvailable) {
+      toast.error("Extension not detected. Please ensure Code-Guard Proctor extension is installed and enabled, and you are not using incognito mode.");
+      return;
+    }
+
     setIsSharing(true);
     try {
-      // ✅ Get student's screen share
+      // ✅ Get student's screen share - enforce entire screen only
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
+        video: {
+          displaySurface: 'monitor' // Force entire screen
+        },
         audio: false,
       });
+      
+      // Validate that entire screen is being shared
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        const settings = videoTrack.getSettings();
+        if (settings.displaySurface !== 'monitor') {
+          // Stop the stream if not entire screen
+          stream.getTracks().forEach(track => track.stop());
+          toast.error("Please share your entire screen, not just a window or tab. Please try again and select 'Entire Screen'.");
+          setIsSharing(false);
+          setExamStarted(false);
+          return;
+        }
+      }
+      
       streamRef.current = stream;
 
       console.log("🎥 Screen sharing started:", stream);

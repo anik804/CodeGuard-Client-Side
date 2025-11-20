@@ -79,6 +79,7 @@ export default function MonitoringDashboardPage() {
   const socketRef = useRef(null);
   const timerRef = useRef(null);
   const fileInputRef = useRef(null);
+  const studentsRef = useRef([]); // Keep ref of students for flag handler
 
   const { peersRef, setupWebRTCHandlers, cleanup: cleanupWebRTC } = useWebRTC(
     socketRef,
@@ -131,13 +132,57 @@ export default function MonitoringDashboardPage() {
 
     // Receive current student list
     socketRef.current.on("current-students", (studentList) => {
+      studentsRef.current = studentList;
       setStudents(studentList);
     });
 
     socketRef.current.on("student-joined", (studentInfo) => {
       console.log(`👩‍🎓 Student ${studentInfo.name} (${studentInfo.studentId}) joined.`);
-      setStudents((prev) => [...prev, studentInfo]);
+      setStudents((prev) => {
+        const updated = [...prev, studentInfo];
+        studentsRef.current = updated;
+        return updated;
+      });
       toast.success(`${studentInfo.name} joined the exam`);
+    });
+
+    // Handle student removed/kicked
+    socketRef.current.on("student-removed", ({ socketId, studentId, studentName }) => {
+      console.log(`🚫 Student ${studentName} (${studentId}) was removed from the exam`);
+      
+      // Remove from students list
+      setStudents((prev) => {
+        const updated = prev.filter(s => s.socketId !== socketId && s.studentId !== studentId);
+        studentsRef.current = updated;
+        return updated;
+      });
+      
+      // Remove from peers (WebRTC connections)
+      if (peersRef && peersRef.current) {
+        const peerToRemove = peersRef.current.find(p => p.peerId === socketId);
+        if (peerToRemove && peerToRemove.peer) {
+          try {
+            peerToRemove.peer.destroy();
+          } catch (err) {
+            console.warn("Error destroying peer:", err);
+          }
+        }
+        const updatedPeers = peersRef.current.filter(p => p.peerId !== socketId);
+        peersRef.current = updatedPeers;
+        setPeers(updatedPeers);
+      }
+      
+      // Remove from flagged students if present
+      setFlaggedStudents((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(studentId);
+        newSet.delete(String(studentId));
+        newSet.delete(socketId);
+        newSet.delete(String(socketId));
+        return newSet;
+      });
+      
+      toast.info(`${studentName} has been removed from the exam`);
     });
 
     // Setup WebRTC handlers
@@ -145,9 +190,69 @@ export default function MonitoringDashboardPage() {
 
     // Handle flagged events
     socketRef.current.on("student-flagged", (log) => {
-      console.log("🚨 Flagged Activity:", log);
-      setFlaggedStudents((prev) => new Set([...prev, log.studentId]));
-      toast.error(`🚨 Student ${log.studentId} visited illegal site!`, {
+      console.log("🚨 Flagged Activity Received:", log);
+      console.log("🚨 Current students ref:", studentsRef.current);
+      
+      // Find matching student in current students list using ref
+      const matchingStudent = studentsRef.current.find(s => 
+        s.studentId === log.studentId ||
+        s.socketId === log.socketId ||
+        String(s.studentId) === String(log.studentId) ||
+        String(s.socketId) === String(log.socketId)
+      );
+      
+      // Collect all possible identifiers to add to flagged set
+      const identifiersToAdd = [
+        log.studentId,
+        log.socketId,
+        String(log.studentId),
+        String(log.socketId)
+      ].filter(Boolean);
+      
+      if (matchingStudent) {
+        // Add all identifiers from the matched student
+        identifiersToAdd.push(
+          matchingStudent.socketId,
+          matchingStudent.studentId,
+          String(matchingStudent.socketId),
+          String(matchingStudent.studentId)
+        );
+        console.log("✅ Found matching student for flag:", matchingStudent);
+      } else {
+        console.warn("⚠️ No matching student found in students list for flag:", {
+          logStudentId: log.studentId,
+          logSocketId: log.socketId,
+          availableStudents: studentsRef.current.map(s => ({ studentId: s.studentId, socketId: s.socketId }))
+        });
+      }
+      
+      // Update flagged students with all identifiers - create new Set to trigger re-render
+      setFlaggedStudents((prev) => {
+        const newSet = new Set(prev);
+        let addedCount = 0;
+        identifiersToAdd.forEach(id => {
+          if (id) {
+            newSet.add(id);
+            addedCount++;
+          }
+        });
+        
+        console.log("🔍 Flag processing:", {
+          logStudentId: log.studentId,
+          logSocketId: log.socketId,
+          illegalUrl: log.illegalUrl,
+          matchedStudent: matchingStudent ? { studentId: matchingStudent.studentId, socketId: matchingStudent.socketId } : null,
+          addedIdentifiers: identifiersToAdd,
+          addedCount,
+          previousSize: prev.size,
+          newSize: newSet.size,
+          fullSet: Array.from(newSet)
+        });
+        
+        return newSet;
+      });
+      
+      toast.error(`🚨 Student ${log.studentId || log.studentName || 'Unknown'} visited illegal site: ${log.illegalUrl || log.blockedUrl || 'N/A'}`, {
         duration: 5000,
       });
     });
@@ -311,14 +416,26 @@ export default function MonitoringDashboardPage() {
 
   const confirmKickStudent = () => {
     if (studentToKick && socketRef.current) {
+      console.log("🚫 Kicking student:", studentToKick);
+      console.log("🚫 Room ID:", roomId);
+      console.log("🚫 Student socketId:", studentToKick.socketId);
+      console.log("🚫 Current students in room:", students.map(s => ({ 
+        socketId: s.socketId, 
+        studentId: s.studentId, 
+        name: s.name 
+      })));
+      
       socketRef.current.emit("examiner-kick-student", {
         roomId,
         studentSocketId: studentToKick.socketId,
         reason: "Removed by examiner"
       });
-      toast.success(`Student ${studentToKick.name} has been removed`);
+      
+      // Don't show success toast here - wait for server confirmation via "student-removed" event
       setKickDialogOpen(false);
       setStudentToKick(null);
+    } else {
+      console.error("❌ Cannot kick student - missing studentToKick or socketRef");
     }
   };
 
@@ -342,11 +459,27 @@ export default function MonitoringDashboardPage() {
     }
   };
 
-  // Dismiss flag
+  // Dismiss flag - remove all possible identifiers
   const handleDismissFlag = (studentId) => {
     setFlaggedStudents((prev) => {
       const newSet = new Set(prev);
+      // Remove all possible identifier formats
       newSet.delete(studentId);
+      newSet.delete(String(studentId));
+      // Also try to find and remove by matching student in the list
+      const student = students.find(s => 
+        s.studentId === studentId || 
+        String(s.studentId) === String(studentId) ||
+        s.socketId === studentId ||
+        String(s.socketId) === String(studentId)
+      );
+      if (student) {
+        newSet.delete(student.studentId);
+        newSet.delete(String(student.studentId));
+        newSet.delete(student.socketId);
+        newSet.delete(String(student.socketId));
+      }
+      console.log("🔍 After dismiss - flagged students:", Array.from(newSet));
       return newSet;
     });
     toast.success(`Flag dismissed for student ${studentId}`);
@@ -504,6 +637,17 @@ export default function MonitoringDashboardPage() {
                   onClose={() => setSidebarOpen(false)}
                   roomId={roomId}
                   flaggedStudents={flaggedStudents}
+                  onUpdateFlaggedStudents={(identifiers) => {
+                    setFlaggedStudents((prev) => {
+                      const newSet = new Set(prev);
+                      identifiers.forEach(id => {
+                        if (id) newSet.add(id);
+                      });
+                      console.log("🔍 Updated flagged students from activity logs:", Array.from(newSet));
+                      return newSet;
+                    });
+                  }}
+                  students={students}
                 />
 
                 <StudentVideoGrid
