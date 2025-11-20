@@ -46,7 +46,8 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
     if (!roomId || typeof window === "undefined") return;
 
     // ✅ Connect to signaling server immediately
-    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    socketRef.current = io(API_BASE_URL);
     
     // Get student ID from sessionStorage
     const studentId = sessionStorage.getItem('studentId') || 'unknown';
@@ -560,7 +561,8 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
+                        const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+                        const proxyUrl = `${API_BASE_URL}/api/rooms/${roomId}/question/download`;
                         
                         const loadingToast = toast.loading("Preparing PDF view...");
                         const headers = {};
@@ -614,7 +616,8 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
+                        const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+                        const proxyUrl = `${API_BASE_URL}/api/rooms/${roomId}/question/download`;
                         
                         const loadingToast = toast.loading("Preparing PDF download...");
                         const headers = {};
@@ -839,7 +842,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
 
                         try {
                           const response = await axios.post(
-                            `http://localhost:3000/api/submissions/${roomId}/submit`,
+                            `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/submissions/${roomId}/submit`,
                             formData,
                             {
                               headers: {

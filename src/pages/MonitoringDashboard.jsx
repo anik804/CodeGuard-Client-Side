@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../components/ui/alert-dialog";
+import { apiConfig } from "../config/api.config.js";
 import { 
   ArrowLeft, 
   Upload, 
@@ -102,10 +103,11 @@ export default function MonitoringDashboardPage() {
   useEffect(() => {
     if (!roomId || typeof window === "undefined") return;
 
-    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
+    const API_BASE_URL = apiConfig.apiUrl;
+    socketRef.current = io(API_BASE_URL);
 
     // Fetch exam details
-    fetch(`http://localhost:3000/api/rooms/${roomId}/exam-details`)
+    fetch(`${API_BASE_URL}/api/rooms/${roomId}/exam-details`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.room) {
@@ -118,7 +120,8 @@ export default function MonitoringDashboardPage() {
       .catch((err) => console.error("Failed to fetch exam details:", err));
 
     // Fetch existing question
-    fetch(`http://localhost:3000/api/rooms/${roomId}/question`)
+    
+    fetch(`${API_BASE_URL}/api/rooms/${roomId}/question`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && data.hasQuestion) {
@@ -132,8 +135,38 @@ export default function MonitoringDashboardPage() {
 
     // Receive current student list
     socketRef.current.on("current-students", (studentList) => {
+      console.log("📋 Received current-students update:", studentList);
       studentsRef.current = studentList;
       setStudents(studentList);
+      
+      // Also remove any peers that are not in the updated student list
+      if (peersRef && peersRef.current) {
+        const activeSocketIds = new Set(studentList.map(s => s.socketId));
+        const peersToKeep = peersRef.current.filter(p => 
+          activeSocketIds.has(p.peerId) || 
+          studentList.some(s => s.socketId === p.peerId || s.studentId === p.studentInfo?.studentId)
+        );
+        
+        const peersToRemove = peersRef.current.filter(p => !peersToKeep.includes(p));
+        
+        // Destroy removed peer connections
+        peersToRemove.forEach(peerItem => {
+          if (peerItem.peer) {
+            try {
+              peerItem.peer.destroy();
+              console.log(`✅ Destroyed peer connection for removed student: ${peerItem.peerId}`);
+            } catch (err) {
+              console.warn("Error destroying peer:", err);
+            }
+          }
+        });
+        
+        if (peersToRemove.length > 0) {
+          peersRef.current = peersToKeep;
+          setPeers([...peersToKeep]);
+          console.log(`✅ Updated peers list. Removed ${peersToRemove.length}, remaining: ${peersToKeep.length}`);
+        }
+      }
     });
 
     socketRef.current.on("student-joined", (studentInfo) => {
@@ -148,29 +181,67 @@ export default function MonitoringDashboardPage() {
 
     // Handle student removed/kicked
     socketRef.current.on("student-removed", ({ socketId, studentId, studentName }) => {
-      console.log(`🚫 Student ${studentName} (${studentId}) was removed from the exam`);
+      console.log(`🚫 Student removed event received: ${studentName} (${studentId}) with socketId: ${socketId}`);
       
       // Remove from students list
       setStudents((prev) => {
-        const updated = prev.filter(s => s.socketId !== socketId && s.studentId !== studentId);
+        console.log(`🔍 Current students before removal:`, prev.map(s => ({ socketId: s.socketId, studentId: s.studentId, name: s.name })));
+        const updated = prev.filter(s => 
+          s.socketId !== socketId && 
+          s.studentId !== studentId &&
+          String(s.socketId) !== String(socketId) &&
+          String(s.studentId) !== String(studentId)
+        );
         studentsRef.current = updated;
+        console.log(`✅ Removed from students list. Remaining:`, updated.length);
         return updated;
       });
       
-      // Remove from peers (WebRTC connections)
-      if (peersRef && peersRef.current) {
-        const peerToRemove = peersRef.current.find(p => p.peerId === socketId);
-        if (peerToRemove && peerToRemove.peer) {
-          try {
-            peerToRemove.peer.destroy();
-          } catch (err) {
-            console.warn("Error destroying peer:", err);
-          }
+      // Remove from peers (WebRTC connections) - try all possible IDs
+      setPeers((prevPeers) => {
+        console.log(`🔍 Current peers before removal:`, prevPeers.map(p => ({ peerId: p.peerId, studentId: p.studentInfo?.studentId })));
+        
+        if (peersRef && peersRef.current) {
+          // Find all peers that match (by socketId or peerId)
+          const peersToRemove = peersRef.current.filter(p => 
+            p.peerId === socketId || 
+            String(p.peerId) === String(socketId) ||
+            p.studentInfo?.socketId === socketId ||
+            p.studentInfo?.studentId === studentId ||
+            String(p.studentInfo?.socketId) === String(socketId) ||
+            String(p.studentInfo?.studentId) === String(studentId)
+          );
+          
+          console.log(`🔍 Peers to remove:`, peersToRemove.map(p => p.peerId));
+          
+          // Destroy peer connections
+          peersToRemove.forEach(peerItem => {
+            if (peerItem.peer) {
+              try {
+                peerItem.peer.destroy();
+                console.log(`✅ Destroyed peer connection for ${peerItem.peerId}`);
+              } catch (err) {
+                console.warn("Error destroying peer:", err);
+              }
+            }
+          });
+          
+          // Remove from peers list
+          const updatedPeers = peersRef.current.filter(p => 
+            p.peerId !== socketId && 
+            String(p.peerId) !== String(socketId) &&
+            p.studentInfo?.socketId !== socketId &&
+            p.studentInfo?.studentId !== studentId &&
+            String(p.studentInfo?.socketId) !== String(socketId) &&
+            String(p.studentInfo?.studentId) !== String(studentId)
+          );
+          
+          peersRef.current = updatedPeers;
+          console.log(`✅ Removed from peers list. Remaining:`, updatedPeers.length);
+          return [...updatedPeers]; // Return new array to trigger re-render
         }
-        const updatedPeers = peersRef.current.filter(p => p.peerId !== socketId);
-        peersRef.current = updatedPeers;
-        setPeers(updatedPeers);
-      }
+        return prevPeers;
+      });
       
       // Remove from flagged students if present
       setFlaggedStudents((prev) => {
@@ -179,7 +250,20 @@ export default function MonitoringDashboardPage() {
         newSet.delete(String(studentId));
         newSet.delete(socketId);
         newSet.delete(String(socketId));
+        console.log(`✅ Removed from flagged students. Remaining:`, newSet.size);
         return newSet;
+      });
+      
+      // Remove from leave requests if present
+      setLeaveRequests((prev) => {
+        const updated = prev.filter(r => 
+          r.socketId !== socketId && 
+          r.studentId !== studentId &&
+          String(r.socketId) !== String(socketId) &&
+          String(r.studentId) !== String(studentId)
+        );
+        console.log(`✅ Removed from leave requests. Remaining:`, updated.length);
+        return updated;
       });
       
       toast.info(`${studentName} has been removed from the exam`);
@@ -279,7 +363,8 @@ export default function MonitoringDashboardPage() {
   // Fetch submissions
   const fetchSubmissions = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/submissions/${roomId}/submissions`);
+      const API_BASE_URL = apiConfig.apiUrl;
+      const response = await fetch(`${API_BASE_URL}/api/submissions/${roomId}/submissions`);
       const data = await response.json();
       if (data.success) {
         setSubmissions(data.submissions || []);
@@ -325,7 +410,7 @@ export default function MonitoringDashboardPage() {
 
     try {
       const response = await axios.post(
-        `http://localhost:3000/api/rooms/${roomId}/question`,
+        `${apiConfig.apiUrl}/api/rooms/${roomId}/question`,
         formData,
         {
           headers: {
@@ -357,7 +442,7 @@ export default function MonitoringDashboardPage() {
   const startExam = async () => {
     try {
       if (examDetails) {
-        await fetch(`http://localhost:3000/api/rooms/${roomId}/exam-details`, {
+        await fetch(`${apiConfig.apiUrl}/api/rooms/${roomId}/exam-details`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -372,7 +457,7 @@ export default function MonitoringDashboardPage() {
       setExamEnded(false);
       timerRef.current = setInterval(() => setTimer((prev) => prev + 1), 1000);
       
-      const response = await fetch(`http://localhost:3000/api/rooms/${roomId}/question`);
+      const response = await fetch(`${apiConfig.apiUrl}/api/rooms/${roomId}/question`);
       const data = await response.json();
       
       if (data.success && data.hasQuestion) {
@@ -442,7 +527,7 @@ export default function MonitoringDashboardPage() {
   // Export attendance
   const handleExportAttendance = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/rooms/${roomId}/attendance/export`);
+      const response = await fetch(`${apiConfig.apiUrl}/api/rooms/${roomId}/attendance/export`);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -829,7 +914,7 @@ export default function MonitoringDashboardPage() {
                                 <Button
                                   onClick={async () => {
                                     try {
-                                      const response = await fetch(`http://localhost:3000/api/submissions/submission/${submission._id}/download`);
+                                      const response = await fetch(`${apiConfig.apiUrl}/api/submissions/submission/${submission._id}/download`);
                                       const data = await response.json();
                                       if (data.success) {
                                         window.open(data.url, '_blank');
@@ -847,7 +932,7 @@ export default function MonitoringDashboardPage() {
                                 <Button
                                   onClick={async () => {
                                     try {
-                                      const response = await fetch(`http://localhost:3000/api/submissions/submission/${submission._id}/download`);
+                                      const response = await fetch(`${apiConfig.apiUrl}/api/submissions/submission/${submission._id}/download`);
                                       const data = await response.json();
                                       if (data.success) {
                                         const a = document.createElement('a');

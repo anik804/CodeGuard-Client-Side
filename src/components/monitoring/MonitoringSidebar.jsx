@@ -167,8 +167,9 @@ function ActivityTab({ roomId, flaggedStudents, onUpdateFlaggedStudents, student
     }
     
     try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       const response = await fetch(
-        `http://localhost:3000/api/proctoring/logs?roomId=${roomId}&page=${page}&limit=${itemsPerPage}`
+        `${API_BASE_URL}/api/proctoring/logs?roomId=${roomId}&page=${page}&limit=${itemsPerPage}`
       );
       const data = await response.json();
       if (data.success) {
@@ -353,7 +354,7 @@ function SubmissionsTab({ roomId }) {
 
   const fetchSubmissions = async () => {
     try {
-      const response = await fetch(`http://localhost:3000/api/submissions/${roomId}/submissions`);
+      const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/submissions/${roomId}/submissions`);
       const data = await response.json();
       if (data.success) {
         setSubmissions(data.submissions || []);
@@ -393,7 +394,7 @@ function SubmissionsTab({ roomId }) {
                   <Button
                     onClick={async () => {
                       try {
-                        const response = await fetch(`http://localhost:3000/api/submissions/submission/${submission._id}/download`);
+                        const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/submissions/submission/${submission._id}/download`);
                         const data = await response.json();
                         if (data.success) {
                           window.open(data.url, '_blank');
@@ -412,7 +413,7 @@ function SubmissionsTab({ roomId }) {
                   <Button
                     onClick={async () => {
                       try {
-                        const response = await fetch(`http://localhost:3000/api/submissions/submission/${submission._id}/download`);
+                        const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/submissions/submission/${submission._id}/download`);
                         const data = await response.json();
                         if (data.success) {
                           const a = document.createElement('a');
@@ -459,7 +460,7 @@ function BlockedWebsitesTab({ roomId }) {
   const fetchWebsites = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/proctoring/blocked-websites/${roomId}`
+        `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/proctoring/blocked-websites/${roomId}`
       );
       const data = await response.json();
       if (data.success) {
@@ -481,7 +482,7 @@ function BlockedWebsitesTab({ roomId }) {
     setLoading(true);
     try {
       const response = await fetch(
-        `http://localhost:3000/api/proctoring/blocked-websites/${roomId}`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/proctoring/blocked-websites/${roomId}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -507,7 +508,7 @@ function BlockedWebsitesTab({ roomId }) {
   const handleRemove = async (website) => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/proctoring/blocked-websites/${roomId}`,
+        `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/proctoring/blocked-websites/${roomId}`,
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
