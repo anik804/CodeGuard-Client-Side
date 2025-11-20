@@ -74,7 +74,8 @@ const AuthPage = () => {
 
       const firebaseUser = await createUser(email, password);
 
-      const res = await fetch("http://localhost:3000/api/api/auth/register", {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const res = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...data, role, firebaseUid: firebaseUser.uid }),
@@ -100,7 +101,8 @@ const AuthPage = () => {
       if (role === "student") bodyData.studentId = data.studentId;
       else if (role === "examiner") bodyData.username = data.username;
 
-      const res = await fetch("http://localhost:3000/api/auth/login", {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(bodyData),

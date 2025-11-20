@@ -1,5 +1,7 @@
-const API_BASE_URL =  "http://localhost:3000";
-// import.meta.env.VITE_API_URL ||
+import { apiConfig } from "../config/api.config.js";
+
+const API_BASE_URL = apiConfig.apiUrl;
+
 export const api = {
   // Analytics endpoints
   getAnalytics: async () => {
