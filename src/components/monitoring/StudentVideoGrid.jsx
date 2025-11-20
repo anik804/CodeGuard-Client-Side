@@ -52,9 +52,32 @@ export function StudentVideoGrid({
 
     const fetchPaginatedStudents = async (silent = false) => {
       try {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
         const response = await fetch(
-          `http://localhost:3000/api/rooms/${roomId}/students?page=${currentPage}&limit=${itemsPerPage}`
+          `${API_BASE_URL}/api/rooms/${roomId}/students?page=${currentPage}&limit=${itemsPerPage}`
         );
+        
+        if (!response.ok) {
+          // Handle 404 or other errors gracefully
+          if (response.status === 404) {
+            if (!silent) {
+              console.warn(`Room ${roomId} not found or not yet initialized`);
+            }
+            // Set empty state instead of showing error
+            setPaginatedStudents([]);
+            setPagination({
+              currentPage: 1,
+              totalPages: 0,
+              totalStudents: 0,
+              limit: itemsPerPage,
+              hasNext: false,
+              hasPrev: false
+            });
+            return;
+          }
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const data = await response.json();
         if (data.success) {
           const newStudents = data.students || [];
@@ -87,9 +110,20 @@ export function StudentVideoGrid({
             }
             return prev;
           });
+        } else {
+          // Handle API error response
+          if (!silent) {
+            console.warn("Failed to fetch students:", data.message);
+          }
+          setPaginatedStudents([]);
         }
       } catch (error) {
-        console.error("Failed to fetch paginated students:", error);
+        // Only log errors if not silent (to avoid console spam)
+        if (!silent) {
+          console.error("Failed to fetch paginated students:", error);
+        }
+        // Set empty state on error to prevent UI issues
+        setPaginatedStudents([]);
       } finally {
         // Only hide loading if we showed it (not on silent refreshes)
         if (isNewPage && !silent) {
