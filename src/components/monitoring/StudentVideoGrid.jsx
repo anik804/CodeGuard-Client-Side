@@ -257,17 +257,72 @@ export function StudentVideoGrid({
                 s.studentId === (p.studentInfo?.studentId || p.peerId)
               ) || p.studentInfo;
               
+              // Get all possible identifiers for this student
+              const studentId = p.studentInfo?.studentId || studentInfo?.studentId || p.peerId;
+              const socketId = studentInfo?.socketId || p.peerId;
+              const peerId = p.peerId;
+              
+              // Check if student is flagged by checking all possible IDs
+              const isFlagged = flaggedStudents.has(studentId) || 
+                               flaggedStudents.has(socketId) || 
+                               flaggedStudents.has(peerId) ||
+                               flaggedStudents.has(String(studentId)) ||
+                               flaggedStudents.has(String(socketId)) ||
+                               flaggedStudents.has(String(peerId));
+              
+              // Always log for debugging - helps identify matching issues
+              if (isFlagged) {
+                console.log("✅ FLAGGED STUDENT DETECTED:", {
+                  studentId,
+                  socketId,
+                  peerId,
+                  studentName: p.studentInfo?.name || studentInfo?.name || "Student",
+                  flaggedSet: Array.from(flaggedStudents),
+                  match: {
+                    byStudentId: flaggedStudents.has(studentId),
+                    bySocketId: flaggedStudents.has(socketId),
+                    byPeerId: flaggedStudents.has(peerId),
+                    byStringStudentId: flaggedStudents.has(String(studentId)),
+                    byStringSocketId: flaggedStudents.has(String(socketId)),
+                    byStringPeerId: flaggedStudents.has(String(peerId))
+                  }
+                });
+              } else if (flaggedStudents.size > 0) {
+                // Only log if there are flagged students but this one isn't flagged
+                console.log("ℹ️ Student not flagged:", {
+                  studentId,
+                  socketId,
+                  peerId,
+                  flaggedSet: Array.from(flaggedStudents),
+                  checks: {
+                    studentIdInSet: flaggedStudents.has(studentId),
+                    socketIdInSet: flaggedStudents.has(socketId),
+                    peerIdInSet: flaggedStudents.has(peerId)
+                  }
+                });
+              }
+              
+              // Prepare student object for kick function
+              const studentForKick = {
+                socketId: socketId || p.peerId || studentInfo?.socketId,
+                studentId: studentId || studentInfo?.studentId || p.studentInfo?.studentId,
+                name: p.studentInfo?.name || studentInfo?.name || "Student"
+              };
+
               return (
                 <StudentVideo 
                   key={p.peerId} 
                   peer={p.peer} 
                   stream={p.stream}
                   studentName={p.studentInfo?.name || studentInfo?.name || "Student"}
-                  studentId={p.studentInfo?.studentId || studentInfo?.studentId || p.peerId}
-                  socketId={studentInfo?.socketId || p.peerId}
-                  isFlagged={flaggedStudents.has(p.studentInfo?.studentId || studentInfo?.studentId || p.peerId)}
+                  studentId={studentId}
+                  socketId={socketId}
+                  isFlagged={isFlagged}
                   onDismissFlag={onDismissFlag}
-                  onKickStudent={onKickStudent ? () => onKickStudent(studentInfo || { socketId: p.peerId, studentId: p.studentInfo?.studentId || p.peerId, name: p.studentInfo?.name || "Student" }) : undefined}
+                  onKickStudent={onKickStudent ? () => {
+                    console.log("🚫 Kick button clicked for student:", studentForKick);
+                    onKickStudent(studentForKick);
+                  } : undefined}
                 />
               );
             })}
