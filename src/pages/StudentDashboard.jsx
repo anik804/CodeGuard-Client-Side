@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { motion } from 'framer-motion';
+import { ExtensionPrompt } from '../components/ExtensionPrompt';
 
 export function StudentDashboardContent({ onStudentNameChange }) {
   const navigate = useNavigate();
@@ -90,6 +91,8 @@ export function StudentDashboardContent({ onStudentNameChange }) {
 
   return (
     <div className="w-full max-w-7xl mx-auto space-y-12 px-4 sm:px-6 lg:px-8">
+      {/* Extension Prompt - Show if extension is not installed */}
+      <ExtensionPrompt />
 
       {/* Join Exam Room */}
       <motion.div
