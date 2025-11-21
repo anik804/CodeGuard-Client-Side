@@ -7,6 +7,7 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import logo from "../assets/logo.png";
 import { AuthContext } from "../provider/AuthProvider";
+import { SquareGrid } from "./react-bits"; 
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 
