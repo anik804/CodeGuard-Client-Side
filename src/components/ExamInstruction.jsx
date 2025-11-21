@@ -46,7 +46,8 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
     if (!roomId || typeof window === "undefined") return;
 
     // ✅ Connect to signaling server immediately
-    socketRef.current = io("https://codeguard-server-side-walb.onrender.com");
+    const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    socketRef.current = io(API_BASE_URL);
     
     // Get student ID from sessionStorage
     const studentId = sessionStorage.getItem('studentId') || 'unknown';
@@ -298,28 +299,96 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
 
         peer.on("signal", (signalData) => {
           console.log("📤 Sending signal back to examiner:", signalData);
-          socketRef.current?.emit("send-signal", {
-            signal: signalData,
-            to: payload.from,
-          });
+          if (socketRef.current && !socketRef.current.disconnected) {
+            socketRef.current.emit("send-signal", {
+              signal: signalData,
+              to: payload.from,
+            });
+          }
         });
 
         peer.on("connect", () => {
           console.log("✅ Peer connection established with examiner");
         });
 
-        peer.on("error", (err) => console.error("Peer error:", err));
+        peer.on("error", (err) => {
+          console.error("Peer error:", err);
+          // Don't show error toast for connection failures - they're handled by retry logic
+          if (!err?.message?.toLowerCase().includes("connection failed")) {
+            console.warn("Peer connection issue:", err.message);
+          }
+        });
 
         peerRef.current = peer;
       }
 
-      // Signal the peer with the received signal
+      // Signal the peer with the received signal - check if peer is not destroyed
       try {
-        if (peerRef.current) {
+        if (peerRef.current && !peerRef.current.destroyed) {
           peerRef.current.signal(payload.signal);
+        } else {
+          console.warn("⚠️ Cannot signal - peer is destroyed or doesn't exist");
+          // Recreate peer if it was destroyed
+          if (!peerRef.current && streamRef.current) {
+            console.log("🔄 Recreating peer connection...");
+            const peer = new Peer({
+              initiator: false,
+              trickle: true,
+              stream: streamRef.current,
+              config: {
+                iceServers: [
+                  { urls: ["stun:bn-turn2.xirsys.com"] },
+                  {
+                    username:
+                      "J4u6YIUf1k35iq4q0pS1BfFWOC4UUQy25eT5ZsDsWdETzfXFw0TYZL4etEHu7VrnAAAAAGjmYQ5NdXNoZmlx",
+                    credential: "2403ae1a-a447-11f0-9415-0242ac140004",
+                    urls: [
+                      "turn:bn-turn2.xirsys.com:80?transport=udp",
+                      "turn:bn-turn2.xirsys.com:3478?transport=udp",
+                      "turn:bn-turn2.xirsys.com:80?transport=tcp",
+                      "turn:bn-turn2.xirsys.com:3478?transport=tcp",
+                      "turns:bn-turn2.xirsys.com:443?transport=tcp",
+                      "turns:bn-turn2.xirsys.com:5349?transport=tcp",
+                    ],
+                  },
+                ],
+              },
+            });
+
+            peer.on("signal", (signalData) => {
+              if (socketRef.current && !socketRef.current.disconnected) {
+                socketRef.current.emit("send-signal", {
+                  signal: signalData,
+                  to: payload.from,
+                });
+              }
+            });
+
+            peer.on("connect", () => {
+              console.log("✅ Peer connection re-established with examiner");
+            });
+
+            peer.on("error", (err) => {
+              console.error("Peer error (recreated):", err);
+            });
+
+            peerRef.current = peer;
+            // Try to signal again with the new peer
+            setTimeout(() => {
+              if (peerRef.current && !peerRef.current.destroyed) {
+                peerRef.current.signal(payload.signal);
+              }
+            }, 100);
+          }
         }
       } catch (err) {
-        console.error("Error signaling peer:", err);
+        // Check if error is about destroyed peer - this is expected and can be ignored
+        if (err?.message?.includes("destroyed")) {
+          console.warn("⚠️ Peer was destroyed, will recreate on next signal");
+          peerRef.current = null;
+        } else {
+          console.error("Error signaling peer:", err);
+        }
       }
     });
 
@@ -355,6 +424,32 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
   //   }
   // };
 
+  // Check if extension is available
+  const checkExtensionAvailable = () => {
+    return new Promise((resolve) => {
+      const timeout = setTimeout(() => {
+        window.removeEventListener("message", handler);
+        resolve(false);
+      }, 2000);
+      
+      window.postMessage({
+        target: "CODEGUARD_EXTENSION",
+        message: { type: "PING" }
+      }, window.location.origin);
+      
+      const handler = (event) => {
+        if (event.data?.target === "CODEGUARD_WEB_APP" && 
+            event.data?.type === "PONG") {
+          clearTimeout(timeout);
+          window.removeEventListener("message", handler);
+          resolve(true);
+        }
+      };
+      
+      window.addEventListener("message", handler);
+    });
+  };
+
   const startExam = async () => {
     if (!roomId) return;
 
@@ -363,13 +458,37 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
       return;
     }
 
+    // Check if extension is available before starting exam
+    const extensionAvailable = await checkExtensionAvailable();
+    if (!extensionAvailable) {
+      toast.error("Extension not detected. Please ensure Code-Guard Proctor extension is installed and enabled, and you are not using incognito mode.");
+      return;
+    }
+
     setIsSharing(true);
     try {
-      // ✅ Get student's screen share
+      // ✅ Get student's screen share - enforce entire screen only
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
+        video: {
+          displaySurface: 'monitor' // Force entire screen
+        },
         audio: false,
       });
+      
+      // Validate that entire screen is being shared
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        const settings = videoTrack.getSettings();
+        if (settings.displaySurface !== 'monitor') {
+          // Stop the stream if not entire screen
+          stream.getTracks().forEach(track => track.stop());
+          toast.error("Please share your entire screen, not just a window or tab. Please try again and select 'Entire Screen'.");
+          setIsSharing(false);
+          setExamStarted(false);
+          return;
+        }
+      }
+      
       streamRef.current = stream;
 
       console.log("🎥 Screen sharing started:", stream);
@@ -442,7 +561,8 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
+                        const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+                        const proxyUrl = `${API_BASE_URL}/api/rooms/${roomId}/question/download`;
                         
                         const loadingToast = toast.loading("Preparing PDF view...");
                         const headers = {};
@@ -496,7 +616,8 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
                     onClick={async () => {
                       try {
                         const token = localStorage.getItem("token") || sessionStorage.getItem("token");
-                        const proxyUrl = `http://localhost:3000/api/rooms/${roomId}/question/download`;
+                        const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+                        const proxyUrl = `${API_BASE_URL}/api/rooms/${roomId}/question/download`;
                         
                         const loadingToast = toast.loading("Preparing PDF download...");
                         const headers = {};
@@ -721,7 +842,7 @@ export function ExamInstructions({ courseName, durationMinutes, roomId, username
 
                         try {
                           const response = await axios.post(
-                            `http://localhost:3000/api/submissions/${roomId}/submit`,
+                            `${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/submissions/${roomId}/submit`,
                             formData,
                             {
                               headers: {

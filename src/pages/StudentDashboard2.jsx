@@ -10,6 +10,7 @@ import {
   GraduationCap,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { ExtensionPrompt } from "@/components/ExtensionPrompt";
 import {
   Chart as ChartJS,
   ArcElement,
@@ -297,6 +298,9 @@ export default function StudentDashboard2() {
       transition={{ duration: 0.5 }}
       className="p-6"
     >
+      {/* Extension Prompt - Show if extension is not installed */}
+      <ExtensionPrompt />
+
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">My Analytics</h1>

@@ -2,16 +2,15 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Download, Calendar, Users, AlertTriangle, Loader2, RefreshCw } from "lucide-react";
+import { Eye, Download, Calendar, Users, AlertTriangle, Loader2, RefreshCw, Clock, FileText, ChevronRight, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -33,6 +32,8 @@ export default function ExamHistory() {
   const [examHistory, setExamHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedExam, setSelectedExam] = useState(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   useEffect(() => {
     fetchExamHistory();
@@ -75,8 +76,25 @@ export default function ExamHistory() {
     toast.info('Export feature coming soon');
   };
 
-  const handleViewDetails = (roomId) => {
-    // Navigate to exam details or monitoring page
+  const handleViewDetails = async (exam) => {
+    try {
+      const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+      const response = await fetch(`${API_BASE_URL}/api/exam-history/${exam.roomId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setSelectedExam(data.data);
+        setIsDialogOpen(true);
+      } else {
+        toast.error('Failed to load exam details');
+      }
+    } catch (err) {
+      console.error('Error fetching exam details:', err);
+      toast.error('Failed to load exam details');
+    }
+  };
+
+  const handleNavigateToMonitoring = (roomId) => {
     window.location.href = `/monitoring/${roomId}`;
   };
 
@@ -169,7 +187,7 @@ export default function ExamHistory() {
         </Card>
       </div>
 
-      {/* Exam Table */}
+      {/* Exam Cards */}
       <Card className="glass-card">
         <CardHeader>
           <CardTitle>All Exams</CardTitle>
@@ -180,30 +198,35 @@ export default function ExamHistory() {
               No exam history found. Completed exams will appear here.
             </div>
           ) : (
-            <motion.div variants={containerVariants} initial="hidden" animate="visible">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border">
-                    <TableHead>Exam Title</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Students</TableHead>
-                    <TableHead>Submissions</TableHead>
-                    <TableHead>Alerts</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {examHistory.map((exam) => (
-                    <motion.tr
-                      key={exam.id || exam.roomId}
-                      variants={rowVariants}
-                      className="border-border hover:bg-secondary/50 transition-colors"
-                    >
-                      <TableCell className="font-medium">{exam.title}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
+            <motion.div 
+              variants={containerVariants} 
+              initial="hidden" 
+              animate="visible"
+              className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+            >
+              {examHistory.map((exam) => (
+                <motion.div
+                  key={exam.id || exam.roomId}
+                  variants={rowVariants}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Card 
+                    className="cursor-pointer hover:shadow-lg transition-all duration-200 border-2 hover:border-primary/50"
+                    onClick={() => handleViewDetails(exam)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="text-lg font-semibold line-clamp-2">
+                          {exam.title}
+                        </CardTitle>
+                        <ChevronRight className="w-5 h-5 text-muted-foreground flex-shrink-0 ml-2" />
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4" />
+                        <span>
                           {exam.date 
                             ? new Date(exam.date).toLocaleDateString('en-US', {
                                 year: 'numeric',
@@ -211,26 +234,27 @@ export default function ExamHistory() {
                                 day: 'numeric'
                               })
                             : 'N/A'}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Users className="w-4 h-4 text-blue-500" />
+                          <span className="font-medium">{exam.students || 0}</span>
+                          <span className="text-muted-foreground">Students</span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-muted-foreground" />
-                          {exam.students || 0}
+                        <div className="flex items-center gap-2 text-sm">
+                          <FileText className="w-4 h-4 text-green-500" />
+                          <span className="font-medium">{exam.submissions || 0}</span>
+                          <span className="text-muted-foreground">Submissions</span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        {exam.submissions || 0}
-                      </TableCell>
-                      <TableCell>
+                      </div>
+                      <div className="flex items-center justify-between pt-2 border-t">
                         <div className="flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 text-destructive" />
-                          <span className={exam.alerts > 0 ? "text-destructive" : ""}>
-                            {exam.alerts || 0}
+                          <AlertTriangle className={`w-4 h-4 ${exam.alerts > 0 ? 'text-destructive' : 'text-muted-foreground'}`} />
+                          <span className={`text-sm font-medium ${exam.alerts > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>
+                            {exam.alerts || 0} Alerts
                           </span>
                         </div>
-                      </TableCell>
-                      <TableCell>
                         <Badge
                           variant={
                             exam.status === "completed"
@@ -242,25 +266,102 @@ export default function ExamHistory() {
                         >
                           {exam.status || 'completed'}
                         </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="hover:bg-primary/10"
-                          onClick={() => handleViewDetails(exam.roomId)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </TableCell>
-                    </motion.tr>
-                  ))}
-                </TableBody>
-              </Table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
             </motion.div>
           )}
         </CardContent>
       </Card>
+
+      {/* Detailed Exam Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">{selectedExam?.examName || selectedExam?.courseName || 'Exam Details'}</DialogTitle>
+            <DialogDescription>
+              Complete information about this exam
+            </DialogDescription>
+          </DialogHeader>
+          {selectedExam && (
+            <div className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Course Name</p>
+                  <p className="font-semibold">{selectedExam.courseName || 'N/A'}</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Room ID</p>
+                  <p className="font-semibold">{selectedExam.roomId || 'N/A'}</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Total Students</p>
+                  <p className="font-semibold text-2xl">{selectedExam.totalStudentsJoined || 0}</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Submissions</p>
+                  <p className="font-semibold text-2xl">{selectedExam.submissionsCount || 0}</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Flagged Students</p>
+                  <p className="font-semibold text-2xl text-destructive">{selectedExam.flaggedStudentsCount || 0}</p>
+                </div>
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <Badge className="mt-1" variant={selectedExam.status === 'completed' ? 'default' : 'secondary'}>
+                    {selectedExam.status || 'completed'}
+                  </Badge>
+                </div>
+              </div>
+              
+              {selectedExam.examStartedAt && (
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">Started At</p>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>{new Date(selectedExam.examStartedAt).toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+              
+              {selectedExam.examEndedAt && (
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">Ended At</p>
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    <span>{new Date(selectedExam.examEndedAt).toLocaleString()}</span>
+                  </div>
+                </div>
+              )}
+              
+              {selectedExam.examDuration && (
+                <div className="p-4 bg-muted/50 rounded-lg">
+                  <p className="text-sm text-muted-foreground mb-2">Duration</p>
+                  <p className="font-semibold">{selectedExam.examDuration} minutes</p>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-4">
+                <Button 
+                  onClick={() => handleNavigateToMonitoring(selectedExam.roomId)}
+                  className="flex-1"
+                >
+                  <Eye className="w-4 h-4 mr-2" />
+                  View Monitoring Dashboard
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

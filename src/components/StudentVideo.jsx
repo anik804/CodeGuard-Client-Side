@@ -9,18 +9,35 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
-    if (ref.current) {
+    if (ref.current && stream) {
       ref.current.srcObject = stream;
       ref.current.onloadedmetadata = () => {
-        ref.current.play().catch(console.error);
+        if (ref.current && !ref.current.paused) {
+          ref.current.play().catch((err) => {
+            // Ignore play() errors - they're often due to browser autoplay policies
+            if (!err.message.includes("play() request was interrupted")) {
+              console.warn("Video play error:", err);
+            }
+          });
+        }
       };
     }
 
-    const handleError = (err) => console.error("Peer error:", err);
-    peer.on("error", handleError);
+    const handleError = (err) => {
+      // Only log non-connection errors to avoid spam
+      if (!err?.message?.toLowerCase().includes("connection failed")) {
+        console.error("Peer error:", err);
+      }
+    };
+    
+    if (peer && typeof peer.on === 'function') {
+      peer.on("error", handleError);
+    }
 
     return () => {
-      peer.off("error", handleError);
+      if (peer && typeof peer.off === 'function') {
+        peer.off("error", handleError);
+      }
     };
   }, [peer, stream]);
 
@@ -70,8 +87,11 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
       className={`bg-white rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-300 relative ${
         isFullscreen ? "fixed inset-0 z-50 rounded-none" : "hover:shadow-xl"
       } ${
-        isFlagged ? "ring-4 ring-red-500 ring-offset-2" : ""
+        isFlagged ? "ring-1 ring-red-400 border-2 border-red-400" : ""
       }`}
+      style={isFlagged ? { 
+        borderColor: '#f87171'
+      } : {}}
     >
       <div className="absolute top-2 left-2 z-10 flex gap-2">
         {isFlagged && onDismissFlag && (
@@ -88,10 +108,15 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
         )}
         {onKickStudent && (
           <Button
-            onClick={() => onKickStudent()}
+            onClick={(e) => {
+              e.stopPropagation(); // Prevent event bubbling
+              if (typeof onKickStudent === 'function') {
+                onKickStudent();
+              }
+            }}
             variant="ghost"
             size="sm"
-            className="bg-orange-500 hover:bg-orange-600 text-white border border-orange-600 rounded-md h-7 px-2 text-xs font-medium shadow-lg"
+            className="bg-orange-500 hover:bg-orange-600 text-white border border-orange-600 rounded-md h-7 px-2 text-xs font-medium shadow-lg z-20"
             title="Kick student"
           >
             <UserX className="w-3 h-3 mr-1" />
@@ -100,7 +125,7 @@ const StudentVideo = ({ peer, stream, studentName = "Student", studentId = "N/A"
         )}
       </div>
       <div className={`relative bg-gradient-to-br from-gray-900 to-black flex justify-center items-center aspect-video group ${
-        isFlagged ? "ring-4 ring-red-500" : ""
+        isFlagged ? "ring-1 ring-red-400 border border-red-400" : ""
       }`}>
         <video
           ref={ref}

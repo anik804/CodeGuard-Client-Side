@@ -366,7 +366,7 @@ const HomeChart = () => {
 
   return (
     <section
-      id="insight-section"
+      id="insights"
       className="py-20 px-6 bg-gradient-to-b from-background to-muted/20"
     >
       <div className="max-w-7xl mx-auto">

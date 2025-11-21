@@ -4,6 +4,7 @@ import HeroSection from "./Home Components/HeroSection";
 import HowItWorksSection from "./Home Components/HowItWorksSection";
 import FeaturesSection from "./Home Components/FeaturesSection";
 import CTASection from "./Home Components/CTASection";
+import PlansSection from "./Home Components/PlansSection";
 // import CircularText from "./Home Components/CircularText";
 const Home = () => {
   return (
@@ -11,6 +12,7 @@ const Home = () => {
       <HeroSection />
       <HowItWorksSection />
       <FeaturesSection />
+      <PlansSection />
       <HomeChart />
       <CTASection />
       <ScrollToTopButton />

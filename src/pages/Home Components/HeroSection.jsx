@@ -101,8 +101,11 @@ const HeroSection = () => {
           <AnimatedButton variant="primary" size="lg">
             Get Started
           </AnimatedButton>
-          <AnimatedButton variant="primary" size="lg">
-
+          <AnimatedButton
+            variant="secondary"
+            size="lg"
+            className="border border-white/40 bg-transparent text-white hover:bg-white/10"
+          >
             Learn More
           </AnimatedButton>
         </StaggerItem>
